@@ -103,3 +103,6 @@ Dựa trên biểu đồ ERD, dữ liệu được chia thành các bảng như 
 6. Bảng weather_condition gồm city_id và collect_date (khóa chính, đồng thời là khóa ngoài tới weather_status), general_weather_status (khóa chính, đồng thời là khóa ngoài tới general_weather), description.
 Các bảng được triển khai trên hệ quản trị MySQL.
 Việc tạo các bảng tương ứng xem trong file [ddl.sql](ddl.sql).
+Dữ liệu trong bảng general_weather được khởi tạo từ trước, được lấy từ link của OpenWeatherMap
+[Mã hóa các General Weather Status](https://openweathermap.org/weather-conditions)
+Việc thêm vào CSDL có thể xem trong file [init_general_weather.sql](init_general_weather.sql)
