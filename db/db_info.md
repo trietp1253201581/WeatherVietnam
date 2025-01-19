@@ -1,8 +1,5 @@
 # DỮ LIỆU
 ## Dữ liệu gốc
-Dữ liệu gốc là một JSON Object, được lấy từ API của OpenWeatherMap có dạng sau:
-`https://api.openweathermap.org/data/2.5/weather?lat=...&lon=...&apiid=?`
-trong đó lat, lon là tọa độ của thành phố cần lấy.
 Ví dụ sau là một JSON thu được từ API này với thành phố Hà Nội.
 ```json
 {
