@@ -97,12 +97,15 @@ Trong đó ý nghĩa của các thực thể:
 Dựa trên biểu đồ ERD, dữ liệu được chia thành các bảng như sau để đảm bảo chuẩn 3NF.
 1. Bảng city gồm city_id (khóa chính), lat, lon, name, timezone, country_code (khóa ngoài tới bảng country). 
 2. Bảng country gồm country_code (khóa chính), name.
-3. Bảng country_record gồm sunrise, sunset, collect_time (ngày giờ thu thập dữ liệu, khóa chính) và country_code (khóa ngoài tới bảng country).
+3. Bảng country_record gồm sunrise, sunset, collect_date (ngày thu thập dữ liệu, khóa chính) và country_code (khóa ngoài tới bảng country).
 4. Bảng general_weather gồm status_id(khóa chính), main, description. 
 5. Bảng weather_status gồm city_id (khóa chính, đồng thời là khóa ngoài liên kết với bảng city), collect_date (khóa chính), base, temp, feels_temp, temp_max, temp_min, pressure, humidity, sea_level, grnd_level, visibility, wind_speed, wind_deg, wind_gust, clouds_all.
-6. Bảng weather_condition gồm city_id và collect_time (khóa chính, đồng thời là khóa ngoài tới weather_status), general_weather_status (khóa chính, đồng thời là khóa ngoài tới general_weather), description.
-Các bảng được triển khai trên hệ quản trị MySQL.
-Việc tạo các bảng tương ứng xem trong file [ddl.sql](ddl.sql).
+6. Bảng weather_condition gồm city_id và collect_date (khóa chính, đồng thời là khóa ngoài tới weather_status), general_weather_status (khóa chính, đồng thời là khóa ngoài tới general_weather), description.
+
+Các bảng được triển khai trên hệ quản trị MySQL. Việc tạo các bảng tương ứng xem trong file [ddl.sql](ddl.sql).
+
 Dữ liệu trong bảng general_weather được khởi tạo từ trước, được lấy từ link của OpenWeatherMap
+
 [Mã hóa các General Weather Status](https://openweathermap.org/weather-conditions)
+
 Việc thêm vào CSDL có thể xem trong file [init_general_weather.sql](init_general_weather.sql)
