@@ -1,4 +1,4 @@
-USE whether_vietnam;
+USE weather_vietnam;
 
 INSERT INTO `weather_vietnam`.`general_weather` (`status_id`, `description`) VALUES ('200', 'thunderstorm with light rain');
 INSERT INTO `weather_vietnam`.`general_weather` (`status_id`, `description`) VALUES ('201', 'thunderstorm with rain');

@@ -41,10 +41,9 @@ CREATE TABLE `general_weather` (
   PRIMARY KEY (`status_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
 
---Create weather_status table
 CREATE TABLE `weather_status` (
   `city_id` int NOT NULL,
-  `collect_date` date NOT NULL,
+  `collect_time` datetime NOT NULL,
   `base` varchar(45) DEFAULT NULL,
   `temp` float DEFAULT NULL,
   `feels_temp` float DEFAULT NULL,
@@ -59,18 +58,16 @@ CREATE TABLE `weather_status` (
   `wind_deg` int DEFAULT NULL,
   `wind_gust` float DEFAULT NULL,
   `clouds_all` int DEFAULT NULL,
-  PRIMARY KEY (`city_id`,`collect_date`),
+  PRIMARY KEY (`city_id`,`collect_time`),
   CONSTRAINT `weather_at_city` FOREIGN KEY (`city_id`) REFERENCES `city` (`city_id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
 
---Create weather_condition table
 CREATE TABLE `weather_condition` (
   `city_id` int NOT NULL,
-  `collect_date` date NOT NULL,
+  `collect_time` datetime NOT NULL,
   `general_weather_status` int NOT NULL,
-  `description` mediumtext,
-  PRIMARY KEY (`city_id`,`collect_date`,`general_weather_status`),
+  PRIMARY KEY (`city_id`,`collect_time`,`general_weather_status`),
   KEY `status_of_general_weather_idx` (`general_weather_status`),
-  CONSTRAINT `condition_of_weather_status` FOREIGN KEY (`city_id`, `collect_date`) REFERENCES `weather_status` (`city_id`, `collect_date`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `status_of_date_city` FOREIGN KEY (`city_id`, `collect_time`) REFERENCES `weather_status` (`city_id`, `collect_time`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `status_of_general_weather` FOREIGN KEY (`general_weather_status`) REFERENCES `general_weather` (`status_id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
