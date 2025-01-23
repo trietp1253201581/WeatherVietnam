@@ -18,4 +18,4 @@ for city_name in city_names:
     response = requests.get(url).json()
     responses.append(response)
 
-print(responses[0])
+print(responses[0]['coord'])

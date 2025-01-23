@@ -8,9 +8,15 @@ SELECT *
 FROM city
 WHERE country_code = %s;
 
---INSERT
+--INSERT WITH UPDATE
 INSERT INTO city(city_id, name, lon, lat, time_zone, country_code)
-VALUES (%s, %s, %s, %s, %s, %s);
+VALUES (%s, %s, %s, %s, %s, %s)
+ON DUPLICATE KEY UPDATE
+name = VALUES(name),
+lon = VALUES(lon),
+lat = VALUES(lat),
+time_zone = VALUES(time_zone),
+country_code = VALUES(country_code);
 
 --UPDATE
 UPDATE city SET name = %s, lon = %s, lat = %s,
