@@ -9,6 +9,7 @@ WEATHER_STATUS_SQL_FILE = 'db\weather_status.sql'
 
 class CityEnableQueries(Enum):
     GET_BY_ID = 'GET BY ID'
+    GET_BY_NAME = 'GET BY NAME'
     GET_ALL_BY_COUNTRY = 'GET ALL BY COUNTRY'
     INSERT = 'INSERT WITH UPDATE'
     UPDATE = 'UPDATE'
@@ -18,11 +19,8 @@ class CityEnableQueries(Enum):
 class CountryEnableQueries(Enum):
     GET_BY_CODE = 'GET BY CODE'
     INSERT = 'INSERT WITH UPDATE'
-    UPDATE = 'UPDATE'
     DELETE = 'DELETE'
     
-class CountryRecordEnableQueries(Enum):
-    GET_ALL_BY_COUNTRY_WITH_DATE_ORDER = 'GET ALL BY COUNTRY WITH DATE ORDER'
-    INSERT = 'INSERT WITH UPDATE'
-    UPDATE = 'UPDATE'
-    DELETE = 'DELETE'
+class GeneralWeatherEnableQueries(Enum):
+    GET_BY_STATUS = 'GET BY STATUS'
+    GET_ALL_STATUS = 'GET ALL STATUS'

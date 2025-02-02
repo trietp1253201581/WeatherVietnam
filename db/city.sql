@@ -3,6 +3,11 @@ SELECT *
 FROM city
 WHERE city_id = %s;
 
+--GET BY NAME
+SELECT * 
+FROM city
+WHERE name = %s;
+
 --GET ALL BY COUNTRY
 SELECT *
 FROM city
@@ -25,8 +30,8 @@ WHERE city_id = %s;
 
 --DELETE
 DELETE FROM city
-WHERE city_id = ?;
+WHERE city_id = %s;
 
 --DELETE ALL BY COUNTRY
 DELETE FROM city
-WHERE country_code = ?;
+WHERE country_code = %s;

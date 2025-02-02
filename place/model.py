@@ -1,69 +1,10 @@
 import pycountry
-from typing import Literal, List
-from datetime import date, datetime
-
-class CountryRecord:
-    def __init__(self,
-                 collect_date: date = date.today(),
-                 sunrise: datetime|None = None,
-                 sunset: datetime|None = None):
-        self.collect_date = collect_date
-        self.sunrise = sunrise
-        self.sunset = sunset
-    
-    @property
-    def collect_date(self):
-        return self.__collect_date
-    
-    @property
-    def sunrise(self):
-        return self.__sunrise
-    
-    @property
-    def sunset(self):
-        return self.__sunset
-        
-    @collect_date.setter
-    def collect_date(self, collect_date: date = date.today()):
-        self.__collect_date = collect_date
-    
-    @sunrise.setter
-    def sunrise(self, sunrise: datetime|None = None):
-        self.__sunrise = sunrise
-        
-    @sunset.setter
-    def sunset(self, sunset: datetime|None = None):
-        self.__sunset = sunset
-        
-    def __str__(self):
-        s = f'CountryRecord('
-        s += f'collect_date={self.collect_date}, '
-        s += f'sunrise={self.sunrise}, '
-        s += f'sunset={self.sunset}'
-        s += f')'
-        return s
-    
-    def from_tuple(source: tuple[date, datetime|None, datetime|None]) -> 'CountryRecord':
-        if len(source) == 0:
-            return None
-        if len(source) != 3:
-            raise ValueError("Invalid argurment, required 3 argument!")
-        return CountryRecord(
-            collect_date=source[0],
-            sunrise=source[1],
-            sunset=source[2]
-        )
-        
-    def to_tuple(self) -> tuple[date, datetime|None, datetime|None]:
-        return self.__collect_date, self.__sunrise, self.__sunset
-        
+from typing import Literal
 
 class Country:
-    def __init__(self, code: str, name: str|None = None,
-                 records: list[CountryRecord]|None = None):
+    def __init__(self, code: str, name: str|None = None):
         self.code = code
         self.name = name
-        self.records = records
         
     @property
     def code(self):
@@ -72,10 +13,6 @@ class Country:
     @property
     def name(self):
         return self.__name
-    
-    @property
-    def records(self):
-        return self.__records
     
     @code.setter
     def code(self, code: str):
@@ -93,18 +30,6 @@ class Country:
     @name.setter
     def name(self, name: str|None):
         self.__name = name
-        
-    @records.setter
-    def records(self, records: list[CountryRecord]|None):
-        self.__records = records
-        if self.__records is None:
-            self.__records: List[CountryRecord] = []
-        
-    def add_record(self, new_record: CountryRecord):
-        self.__records.append(new_record)
-        
-    def clear_records(self):
-        self.__records.clear()
             
     def get_code_with_type(self, code_type: Literal['alpha_2', 'alpha_3']) -> str:
         if self.__code is None:
@@ -134,30 +59,23 @@ class Country:
         
     def __str__(self):
         s = f'Country('
-        s += f'code={self.code}, '
-        s += f'name={self.name}, '
-        s += f'records=[{", ".join(str(record) for record in self.records)}]'
+        s += f'code={self.__code}, '
+        s += f'name={self.__name}'
         s += f')'
         return s
     
-    def from_tuple(source: tuple[str, str|None, list[tuple]|None]) -> 'Country':
+    def from_tuple(source: tuple[str, str|None]) -> 'Country':
         if len(source) == 0:
             return None
-        if len(source) != 3:
-            raise ValueError("Invalid argurment, required 3 argument!")
-        if source[2] is None:
-            return Country(
-                code=source[0],
-                name=source[1]
-            )
+        if len(source) != 2:
+            raise ValueError("Invalid argurment, required 2 argument!")
         return Country(
             code=source[0],
-            name=source[1],
-            records=[CountryRecord.from_tuple(record) for record in source[2]]
+            name=source[1]
         )
     
-    def to_tuple(self) -> tuple[str, str|None, list[tuple]]:
-        return self.__code, self.__name, [record.to_tuple() for record in self.__records]
+    def to_tuple(self) -> tuple[str, str|None]:
+        return self.__code, self.__name
     
 class City:
     def __init__(self, city_id: int, 
@@ -230,9 +148,9 @@ class City:
         s = f'City('
         s += f'city_id={self.city_id}, '
         s += f'name={self.name}, '
-        s += f'lon={self.lon:.2f}, '
-        s += f'lat={self.lat:.2f}, '
-        s += f'time_zon=UTC{"+" if self.time_zone>=0 else "-"}{abs(self.time_zone)}, '
+        s += f'lon={self.lon:.2f}, ' if self.lon is not None else 'lon=None, '
+        s += f'lat={self.lat:.2f}, ' if self.lat is not None else 'lat=None, '
+        s += f'time_zone=UTC{"+" if self.time_zone>=0 else "-"}{abs(self.time_zone)}, '
         s += f'country={self.country}'
         s += f')'
         return s
@@ -250,3 +168,6 @@ class City:
             time_zone=source[4],
             country=Country.from_tuple(source[5])
         )
+        
+    def to_tuple(self) -> tuple[int, str|None, float, float, int, tuple]:
+        return self.__city_id, self.__name, self.__lon, self.__lat, self.__time_zone, self.__country.to_tuple()
