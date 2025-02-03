@@ -9,4 +9,4 @@ VALUES(%s, %s, %s);
 
 --DELETE
 DELETE FROM weather_condition
-WHERE city_id = %s AND collect_time = %s AND general_weather_status = %s;
+WHERE city_id = %s AND collect_time = %s;

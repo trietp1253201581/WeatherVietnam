@@ -8,7 +8,7 @@ from mysql.connector import Error
 from typing import List
 from abc import ABC, abstractmethod
 
-from model import Country, City
+from place.model import Country, City
 import db.info as dbinfo
 
 from common.dao import BasicMySQLDAO, DAOException, NotExistDataException

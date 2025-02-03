@@ -4,20 +4,16 @@ init_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 import sys
 sys.path.append(init_dir)
 from typing import Literal, Dict, List
-from model import City
-from dao import BasicCityDAO, BasicCountryDAO, MySQLCityDAO, MySQLCountryDAO
+from place.model import City
+from place.dao import BasicCityDAO, BasicCountryDAO
 import requests
 
-config_dir = os.path.join(init_dir, 'config.json')
-with open(config_dir, 'r') as config_file:
-    config = json.load(config_file)
-
-def _get_coord_from_api(city: City,
-                        api: Literal['OPEN_WEATHER_MAP'] = 'OPEN_WEATHER_MAP') -> tuple[float, float]:
-    if api == 'OPEN_WEATHER_MAP':
-        api_key = config['OPEN_WEATHER_MAP_API_KEY']
-    else:
-        raise ValueError('Not supported API!')
+def extract_from_open_weather(city: City) -> tuple[float, float]:
+    config_dir = os.path.join(init_dir, 'config.json')
+    with open(config_dir, 'r') as config_file:
+        config = json.load(config_file)
+        
+    api_key = config['OPEN_WEATHER_MAP_API_KEY']
     
     base_url = "http://api.openweathermap.org/geo/1.0/direct"
     url = f"{base_url}?q={city.name},{city.country.code}&limit=1&appid={api_key}"
@@ -31,7 +27,7 @@ def _get_city(city: int|str,
     else:
         result_city = city_dao.get(city_name=city)
     if result_city.lon is None or result_city.lat is None:
-        result_city.lon, result_city.lat = _get_coord_from_api(result_city)
+        result_city.lon, result_city.lat = extract_from_open_weather(result_city)
         city_dao.insert(result_city)
     return result_city
 
@@ -40,7 +36,7 @@ def _get_all_of_country(country: str,
     citys = city_dao.get_all(country_code=country)
     for result_city in citys:
         if result_city.lon is None or result_city.lat is None:
-            result_city.lon, result_city.lat = _get_coord_from_api(result_city)
+            result_city.lon, result_city.lat = extract_from_open_weather(result_city)
             city_dao.insert(result_city)
     return citys
 
@@ -91,8 +87,3 @@ def delete_city(city_dao: BasicCityDAO,
 def get_country(country_code: str,
                 country_dao: BasicCountryDAO):
     return country_dao.get(country_code)
-            
-if __name__ == '__main__':
-    city_dao = MySQLCityDAO('localhost', 'weather_vietnam', 'root', 'Asensio1234@')
-    for city in get_city(city_dao ,'all_country', country='VN'):
-        print(city)

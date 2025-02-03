@@ -24,3 +24,15 @@ class CountryEnableQueries(Enum):
 class GeneralWeatherEnableQueries(Enum):
     GET_BY_STATUS = 'GET BY STATUS'
     GET_ALL_STATUS = 'GET ALL STATUS'
+    
+class WeatherStatusEnableQueries(Enum):
+    GET_BY_CITY_AND_TIME = 'GET BY CITY AND TIME'
+    GET_ALL_BY_CITY = 'GET ALL BY CITY'
+    INSERT = 'INSERT'
+    DELETE = 'DELETE'
+    DELETE_ALL_BY_CITY = 'DELETE ALL BY CITY'
+    
+class WeatherConditionEnableQueries(Enum):
+    GET_ALL_BY_CITY_AND_TIME = 'GET ALL BY CITY AND TIME'
+    INSERT = 'INSERT'
+    DELETE = 'DELETE'

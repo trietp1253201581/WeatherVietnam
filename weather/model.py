@@ -28,6 +28,7 @@ class GeneralWeather:
         s += f')'
         return s
     
+    @staticmethod
     def from_tuple(source: tuple[int, str|None]) -> 'GeneralWeather':
         if len(source) == 0:
             return None
@@ -40,8 +41,6 @@ class GeneralWeather:
     
     def to_tuple(self) -> tuple[int, str|None]:
         return self.__status_id, self.__description
-    
-from datetime import datetime
 
 class WeatherStatus:
     def __init__(self, city_id: int, collect_time: datetime,
@@ -53,7 +52,9 @@ class WeatherStatus:
                  clouds_all: int|None = None, rain: float|None = None,
                  sunrise: datetime|None = None, sunset: datetime|None = None,
                  aqi: int|None = None, pm2_5: float|None = None,
-                 general_weathers: list[GeneralWeather] = []):
+                 general_weathers: list[GeneralWeather] = [],
+                 max_decimal: int = 7):
+        self.max_decimal = max_decimal
         self.city_id = city_id
         self.collect_time = collect_time
         self.temp = temp
@@ -149,6 +150,10 @@ class WeatherStatus:
     @property
     def general_weathers(self):
         return self.__general_weathers
+    
+    @property
+    def max_decimal(self):
+        return self.__max_decimal
 
     @city_id.setter
     def city_id(self, city_id: int):
@@ -160,11 +165,17 @@ class WeatherStatus:
 
     @temp.setter
     def temp(self, temp: float|None):
-        self.__temp = temp
+        if temp is None: 
+            self.__temp = None
+        else:
+            self.__temp = float(round(temp, self.__max_decimal))
     
     @feels_temp.setter
     def feels_temp(self, feels_temp: float|None):
-        self.__feels_temp = feels_temp
+        if feels_temp is None:
+            self.__feels_temp = None
+        else:
+            self.__feels_temp = float(round(feels_temp, self.__max_decimal))
 
     @pressure.setter
     def pressure(self, pressure: int|None):
@@ -188,7 +199,10 @@ class WeatherStatus:
     
     @wind_speed.setter
     def wind_speed(self, wind_speed: float|None):
-        self.__wind_speed = wind_speed
+        if wind_speed is None:
+            self.__wind_speed = None
+        else:
+            self.__wind_speed = float(round(wind_speed, self.__max_decimal))
     
     @wind_deg.setter
     def wind_deg(self, wind_deg: int|None):
@@ -196,7 +210,10 @@ class WeatherStatus:
     
     @wind_gust.setter
     def wind_gust(self, wind_gust: float|None):
-        self.__wind_gust = wind_gust
+        if wind_gust is None:
+            self.__wind_gust = None
+        else:
+            self.__wind_gust = float(round(wind_gust, self.__max_decimal))
     
     @clouds_all.setter
     def clouds_all(self, clouds_all: int|None):
@@ -204,7 +221,10 @@ class WeatherStatus:
     
     @rain.setter
     def rain(self, rain: float|None):
-        self.__rain = rain
+        if rain is None:
+            self.__rain = None
+        else: 
+            self.__rain = float(round(rain, self.__max_decimal))
     
     @sunrise.setter
     def sunrise(self, sunrise: datetime|None):
@@ -220,11 +240,18 @@ class WeatherStatus:
     
     @pm2_5.setter
     def pm2_5(self, pm2_5: float|None):
-        self.__pm2_5 = pm2_5
+        if pm2_5 is None:
+            self.__pm2_5 = None
+        else:
+            self.__pm2_5 = float(round(pm2_5, self.__max_decimal))
         
     @general_weathers.setter
     def general_weathers(self, general_weathers: list[GeneralWeather] = []):
         self.__general_weathers = general_weathers
+        
+    @max_decimal.setter
+    def max_decimal(self, max_decimal: int):
+        self.__max_decimal = max_decimal
 
     def __str__(self):
         s = f'WeatherStatus('
@@ -245,12 +272,19 @@ class WeatherStatus:
         s += f'sunrise={self.__sunrise}, '
         s += f'sunset={self.__sunset}, '
         s += f'aqi={self.__aqi}, ' 
-        s += f'pm2_5={self.__pm2_5}'
+        s += f'pm2_5={self.__pm2_5}, '
         s += f'general_weathers=[{", ".join(str(general_weather) for general_weather in self.__general_weathers)}]'
         s += ')'
         return s
 
-    def from_tuple(source: tuple) -> 'WeatherStatus':
+    @staticmethod
+    def from_tuple(source: tuple[int, datetime, float | None, 
+                                 float | None, int | None, int | None, 
+                                 int | None, int | None, int | None, 
+                                 float | None, int | None, float | None,
+                                 int | None, float | None, datetime | None, 
+                                 datetime | None, int | None, float | None, 
+                                 list[tuple[int, str | None]]]) -> 'WeatherStatus':
         if len(source) == 0:
             return None
         if len(source) != 19:
@@ -274,13 +308,20 @@ class WeatherStatus:
             sunset=source[15],
             aqi=source[16],
             pm2_5=source[17],
-            general_weathers=source[18]
+            general_weathers=[GeneralWeather.from_tuple(item) for item in source[18]],
         )
 
-    def to_tuple(self) -> tuple:
+    def to_tuple(self) -> tuple[int, datetime, float | None, 
+                                float | None, int | None, int | None, 
+                                int | None, int | None, int | None, 
+                                float | None, int | None, float | None,
+                                int | None, float | None, datetime | None, 
+                                datetime | None, int | None, float | None, 
+                                list[tuple[int, str | None]]]:
         return (self.__city_id, self.__collect_time, self.__temp, self.__feels_temp, self.__pressure, 
                 self.__humidity, self.__sea_level, self.__grnd_level, self.__visibility, self.__wind_speed, 
                 self.__wind_deg, self.__wind_gust, self.__clouds_all, self.__rain, self.__sunrise, 
-                self.__sunset, self.__aqi, self.__pm2_5, self.__general_weathers)
+                self.__sunset, self.__aqi, self.__pm2_5, 
+                [general_weather.to_tuple() for general_weather in self.__general_weathers])
 
         

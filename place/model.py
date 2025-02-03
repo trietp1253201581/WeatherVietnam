@@ -64,6 +64,7 @@ class Country:
         s += f')'
         return s
     
+    @staticmethod
     def from_tuple(source: tuple[str, str|None]) -> 'Country':
         if len(source) == 0:
             return None
@@ -155,6 +156,7 @@ class City:
         s += f')'
         return s
     
+    @staticmethod
     def from_tuple(source: tuple[int, str|None, float, float, int, tuple]) -> 'City':
         if len(source) == 0:
             return None
