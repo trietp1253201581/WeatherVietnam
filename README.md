@@ -15,3 +15,5 @@ trong đó lat, lon là tọa độ của thành phố cần lấy.
 trong đó country_code là Code của quốc gia theo ISO 3166-1 alpha-2, city name là tên viết cách không dấu của tỉnh/thành phố.
 
 Chi tiết về dữ liệu xem ở file [db_info.md](db/db_info.md)
+
+API Key của tôi được lưu giữ trong `config.json`, được ẩn đi để tăng tính bảo mật (thêm vào .gitignore).

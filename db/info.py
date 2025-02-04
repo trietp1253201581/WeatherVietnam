@@ -1,3 +1,14 @@
+"""
+Module `info` cung cấp đường dẫn tới các file `.sql` cần thiết
+và các hằng đại diện cho các loại câu lệnh có thể thao tác với 1
+bảng trong CSDL.
+
+Author: 
+    Lê Minh Triết
+Last Modified Date: 
+    03/02/2025
+"""
+
 from enum import Enum
 
 CITY_SQL_FILE = 'db\city.sql'

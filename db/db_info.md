@@ -123,6 +123,9 @@ Giải thích về các trường thông tin như sau:
 * aqi: Chỉ số aqi (được phân loại dựa trên các chỉ số khác trong components, chi tiết xem tại [API](https://openweathermap.org/api/air-pollution))
 * components: Nồng độ chất ô nhiễm tính bằng μg/m^3 (CO, NO, NO2, O3, SO2, PM2.5, PM10, NH3)
 * dt: Thời điểm lấy dữ liệu
+### Dữ liệu về các thành phố của Việt Nam
+Mỗi thành phố của Việt Nam sẽ mang mã của tỉnh (định danh duy nhất) được lấy từ nguồn sau:
+[Định danh theo CCCD](https://thuvienphapluat.vn/phap-luat/ho-tro-phap-luat/ma-63-tinh-thanh-pho-su-dung-tren-the-can-cuoc-cong-dan-gan-chip-y-nghia-ma-so-can-cuoc-cong-dan-ga-986546-31326.html#google_vignette)
 ## Mô hình hóa dữ liệu
 ### Mô hình logic
 Mô hình logic được diễn tả qua biểu đồ ERD dưới đây.
@@ -141,9 +144,28 @@ Dựa trên biểu đồ ERD, dữ liệu được chia thành các bảng như 
 5. Bảng weather_condition gồm city_id và collect_time (khóa chính, đồng thời là khóa ngoài tới weather_status), general_weather_status (khóa chính, đồng thời là khóa ngoài tới general_weather), description.
 
 Các bảng được triển khai trên hệ quản trị MySQL. Việc tạo các bảng tương ứng xem trong file [ddl.sql](ddl.sql).
+## Dữ liệu khởi tạo
 
 Dữ liệu trong bảng general_weather được khởi tạo từ trước, được lấy từ link của OpenWeatherMap
 
 [Mã hóa các General Weather Status](https://openweathermap.org/weather-conditions)
 
 Việc thêm vào CSDL có thể xem trong file [init_general_weather.sql](init_general_weather.sql)
+
+Dữ liệu trong bảng city được lấy và thêm vào (lúc đầu có thể không cần lon và lat) từ đường link [Định danh theo CCCD](https://thuvienphapluat.vn/phap-luat/ho-tro-phap-luat/ma-63-tinh-thanh-pho-su-dung-tren-the-can-cuoc-cong-dan-gan-chip-y-nghia-ma-so-can-cuoc-cong-dan-ga-986546-31326.html#google_vignette)
+
+Trong dự án này, tôi lấy ban đầu 10 thành phố:
+1. Thành phố Hà Nội (TW) (001).
+2. Thành phố Tuyên Quang (tỉnh Tuyên Quang) (008).
+3. Thành phố Điện Biên Phủ (tỉnh Điện Biên) (011).
+4. Thành phố Sơn La (tỉnh Sơn La) (014).
+5. Thành phố Việt Trì (tỉnh Phú Thọ) (025).
+6. Thành phố Vinh (tỉnh Nghệ An) (040).
+7. Thành phố Đà Nẵng (TW) (048).
+8. Thành phố Hồ Chí Minh (TW) (079).
+9. Thành phố Cần Thơ (TW) (092).
+10. Thành phố Cà Mau (tỉnh Cà Mau) (096).
+
+`lon` và `lat` của các thành phố khi không có sẵn sẽ được lấy từ api của openweathermap.
+
+Dữ liệu ban đầu có thể được thêm vào từ file [init_city.sql](init_city.sql)
