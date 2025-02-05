@@ -1,7 +1,19 @@
+"""
+Module `etl` cung cấp các quy trình ETL thủ công hoặc tự động
+để thực hiện lấy, chuyển đồi và lưu vào CSDL dữ liệu các
+trạng thái thời tiết của các thành phố ở Việt Nam.
+
+Author: 
+    Lê Minh Triết
+Last Modified Date: 
+    04/02/2025
+"""
+
 import os
 init_dir = os.path.abspath(os.path.join(os.path.dirname(__file__)))
 import sys
 sys.path.append(init_dir)
+
 from typing import List, Literal
 
 #Place
@@ -25,9 +37,13 @@ logging.basicConfig(filename='etl_log.log', level=logging.INFO,
 import schedule
 
 def weather_vietnam_etl():
+    """
+    Quy trình ETL thủ công để làm việc với dữ liệu thời tiết các thành phố Việt Nam
+    """
     # Bắt đầu
     logging.info('<<ETL Process>>')
     total_start_time = time.time()
+    
     # Cấu hình các DAO
     logging.info('Config data access object...')
     city_dao = MySQLCityDAO('localhost', 'weather_vietnam', 'root', 'Asensio1234@')
@@ -51,6 +67,8 @@ def weather_vietnam_etl():
     start_time = time.time()
     success = 0
     json_datas: List[dict] = []
+    # Với mỗi thành phố, thực hiện extract và thêm vào list các JSON
+    # Nếu có một thành phố bị lỗi thì vẫn extract tiếp và chỉ thông báo ERROR ra log
     for city in cities:
         try:
             json_datas.append({
@@ -70,6 +88,8 @@ def weather_vietnam_etl():
     start_time = time.time()
     success = 0
     new_weather_status_lst: List[WeatherStatus] = []
+    # Chỉ transform dữ liệu những thành phố được extract thành công
+    # Nếu có thành phố nào bị chuyển đối lỗi thì vẫn tiếp tục và chỉ ghi log ERROR
     for json_data in json_datas:
         try:
             new_weather_status_lst.append(transform(json_data['data'], json_data['city'].city_id))
@@ -85,6 +105,7 @@ def weather_vietnam_etl():
     logging.info(f'Loading weather data for {len(new_weather_status_lst)} cities of Viet Nam...')
     start_time = time.time()
     success = 0
+    # Chỉ thực hiện load những dữ liệu đã được transform thành công
     for new_weather_status in new_weather_status_lst:
         try:
             load(weather_dao, new_weather_status)
@@ -96,30 +117,43 @@ def weather_vietnam_etl():
     msg = f'Successfully load {success}/{len(new_weather_status_lst)}. Elapsed Time: {end_time-start_time:.4f}s...'
     logging.info(msg)
     
+    # Tổng kết job
     total_end_time = time.time()
     msg = f'<<End>>. Total Elapsed Time: {total_end_time-total_start_time:.4f}s...'
     logging.info(msg)
-    
-job_cnt = 0
+
+_job_cnt = 0
     
 def _weather_viet_nam_etl_limited():
-    global job_cnt
+    """
+    Quy trình được thực hiện cùng với việc tăng bộ đếm Job
+    """
+    global _job_cnt
 
-    job_cnt += 1
-    logging.info(f'---Job {job_cnt}---')
+    _job_cnt += 1
+    logging.info(f'---Job {_job_cnt}---')
     weather_vietnam_etl()
 
 def _supported_3_minutes_job():
+    """
+    Quy trình ETL hỗ trợ check tròn 3 phút
+    """
     now = datetime.datetime.now()
     if now.minute % 3 == 0:
         _weather_viet_nam_etl_limited()
 
 def _supported_10_minutes_job():
+    """
+    Quy trình ETL hỗ trợ check tròn 10 phút
+    """
     now = datetime.datetime.now()
     if now.minute % 10 == 0:
         _weather_viet_nam_etl_limited()
         
 def _supported_30_minutes_job():
+    """
+    Quy trình ETL hỗ trợ check tròn 30 phút
+    """
     now = datetime.datetime.now()
     if now.minute % 30 == 0:
         _weather_viet_nam_etl_limited()
@@ -127,8 +161,27 @@ def _supported_30_minutes_job():
 def auto_weather_vietnam_etl(type: Literal['daily', 'hourly', '30-min', '10-min', '3-min'] = '10-min',
                              job_limits: int|None = None,
                              daily_collect_time: datetime.time|list[datetime.time]|None = None):
-    global job_cnt 
-    job_cnt = 0
+    """
+    Quy trình ETL tự động để thao tác với dữ liệu thời tiết các thành phố ở Việt Nam
+
+    Args:
+        type (Literal[&#39;daily&#39;, &#39;hourly&#39;, &#39;30, optional): Tần suất lấy dữ liệu. Defaults to '10-min'.
+            `'daily'`: Hàng ngày, có thể vào các khung giờ nhất định, lúc này tham số `daily_collect_time` phải được sử dụng.
+            `'hourly'`: Hàng giờ, sẽ lấy chẵn giờ, tức là vào 0h, 1h, 2h,...
+            `'30-min'`: Cách đều 30 phút, bắt đầu từ 0h (0h, 0h30, 1h, 1h30, ...)
+            `'10-min'`: Cách đều 10 phút, bắt đầu từ 0h (0h, 0h10, 0h20, ...)
+            `'3-min'`: Cách đều 3 phút, bắt đầu từ 0h (0h, 0h3, 0h6, 0h9, ...)
+        job_limits (int | None, optional): Giới hạn số công việc thực hiện. Defaults to None.
+        daily_collect_time (datetime.time | list[datetime.time] | None, optional): _description_. Defaults to None.
+
+    Raises:
+        ValueError: Khi chọn `type='daily'` mà không có tham số `daily_collect_time`.
+    """
+    global _job_cnt 
+    _job_cnt = 0
+    
+    # Tùy thuộc vào type mà lên lịch kế hoạch hoạt động bằng schedule
+    # Sẽ gọi các hàm wrapper tương ứng của quy trình ETL thủ công
     if type == 'daily':
         if daily_collect_time is None:
             raise ValueError('Daily type required daily collect time!')
@@ -149,13 +202,13 @@ def auto_weather_vietnam_etl(type: Literal['daily', 'hourly', '30-min', '10-min'
     elif type == '3-min':
         schedule.every().minute.at(":00").do(_supported_3_minutes_job).tag(type)
     
+    # Thực hiện các job theo kế hoạch định trước, chỉ dừng khi đạt giới hạn số lượng.
     while True:
         schedule.run_pending()
         time.sleep(1)
-        if job_limits is not None and job_cnt >= job_limits:
+        if job_limits is not None and _job_cnt >= job_limits:
             logging.info(f"Execution job count has reached {job_limits}. Cancelling the job.")
             schedule.clear(type)
             break
     
     logging.info('!!!Done!!!')
-        
