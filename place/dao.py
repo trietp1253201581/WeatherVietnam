@@ -19,7 +19,7 @@ from typing import List
 from abc import ABC, abstractmethod
 
 import db.info as dbinfo
-from common.dao import BasicMySQLDAO, DAOException, NotExistDataException
+from common.dao import BasicMySQLDAO, DAOException, NotExistDataException, BasicMongoDBDAO
 
 from place.model import Country, City
 
@@ -368,3 +368,166 @@ class MySQLCityDAO(BasicMySQLDAO, BasicCityDAO):
             raise DAOException(e.msg)
         finally:
             cursor.close()
+            
+class MongoDBCountryDAO(BasicMongoDBDAO, BasicCountryDAO):
+    """
+    Triển khai các phương thức thao tác với CSDL các city
+    trên CSDL MongoDB
+    """
+    
+    def __init__(self, host: str, port: int,
+                 db: str, user: str|None = None, password: str|None = None):
+        """
+        Khởi tạo một DAO kết nối tới MongoDB để thao tác dữ liệu country
+
+        Args:
+            host (str): Máy chủ CSDL, thông thường là `'localhost'`.
+            port (int): Cổng phục vụ của MongoDB trên máy chủ, thông thường là `27017`.
+            db (str): Cơ sở dữ liệu cần kết nối tới
+            user (str | None, optional): Tên đăng nhập, yêu cầu khi CSDL phải xác thực. Defaults to None.
+            password (str | None, optional): Mật khẩu, yêu cầu khi CSDL phải xác thực. Defaults to None.
+        """ 
+        super().__init__(host, port, db, 
+                         collection='country',
+                         user=user, password=password)
+        self._country_collection = self._collections['country']
+    
+    def get(self, code: str) -> Country:
+        query = {
+            'code': Country(code).code
+        }
+        
+        result = self._country_collection.find_one(query)
+        if result is None:
+            raise NotExistDataException()
+        return Country.from_json(source=result)
+    
+    def insert(self, new_country: Country) -> None:
+        query = {
+            'code': new_country.code
+        }
+        update = {
+            '$set': new_country.to_json()
+        }
+        
+        result = self._country_collection.update_one(query, update, upsert=True)
+        if result.upserted_id is None and result.matched_count == 0:
+            raise DAOException("Failed insert")
+    
+    def delete(self, code: str) -> None:
+        values = {
+            'code': code
+        }
+        
+        result = self._country_collection.delete_one(values)
+        if result.deleted_count == 0:
+            raise DAOException("Failed deleted!")
+        
+class MongoDBCityDAO(BasicMongoDBDAO, BasicCityDAO):
+    """
+    Triển khai các phương thức thao tác với CSDL các city
+    trên CSDL MongoDB
+    """
+    
+    def __init__(self, host: str, port: int,
+                 db: str, user: str|None = None, password: str|None = None):
+        """
+        Khởi tạo một DAO kết nối tới MongoDB để thao tác dữ liệu city
+
+        Args:
+            host (str): Máy chủ CSDL, thông thường là `'localhost'`.
+            port (int): Cổng phục vụ của MongoDB trên máy chủ, thông thường là `27017`.
+            db (str): Cơ sở dữ liệu cần kết nối tới
+            user (str | None, optional): Tên đăng nhập, yêu cầu khi CSDL phải xác thực. Defaults to None.
+            password (str | None, optional): Mật khẩu, yêu cầu khi CSDL phải xác thực. Defaults to None.
+        """ 
+        super().__init__(host, port, db, 
+                         collection=['country', 'city'],
+                         user=user, password=password)
+        self._country_collection = self._collections['country']
+        self._city_collection = self._collections['city']
+    
+    def get(self, city_id: str|None = None, city_name: str|None = None) -> City:
+        if city_id is None and city_name is None:
+            raise NotExistDataException()
+        if city_id is not None:
+            city_query = {
+                'city_id': city_id
+            }
+        else:
+            city_query = {
+                'name': city_name
+            }
+        
+        # Lấy city
+        city_result = self._city_collection.find_one(city_query)
+        if city_result is None:
+            raise NotExistDataException()
+        
+        # Lấy thông tin country mà city thuộc về
+        country_query = {
+            'code': city_result['country']['code']
+        }
+        country_result = self._country_collection.find_one(country_query)
+        
+        # Tổng hợp
+        city_result['country'] = country_result
+        return City.from_json(city_result)
+    
+    def insert(self, new_city: City) -> None:
+        # Lấy các query và values
+        city_query = {
+            'city_id': new_city.city_id
+        }
+        values = new_city.to_json()
+        values['country'].pop('name')
+        city_update = {
+            '$set': values
+        }
+        country_query = {
+            'code': new_city.country.code
+        }
+        country_update = {
+            '$set': new_city.country.to_json()
+        }
+        
+        # Thêm country nếu cần trước
+        country_result = self._country_collection.update_one(country_query, country_update, upsert=True)
+        if country_result.upserted_id is None and country_result.matched_count == 0:
+            raise Exception("Failed insert country!")
+
+        # Thêm city
+        city_result = self._city_collection.update_one(city_query, city_update, upsert=True)
+        if city_result.upserted_id is None and city_result.matched_count == 0:
+            raise Exception("Failed insert city!")
+        
+    def delete(self, city_id: int) -> None:
+        values = {
+            'city_id': city_id
+        }
+        
+        result = self._city_collection.delete_one(values)
+        if result.deleted_count == 0:
+            raise DAOException("Failed deleted!")
+    
+    def get_all(self, country_code):
+        city_query = {
+            'country.code': country_code
+        }
+        
+        # Lấy danh sách các city result
+        city_results = self._city_collection.find(city_query)
+        results: List[City] = []
+        for city_result in city_results:
+            # Với mỗi city thì lấy thông tin country
+            # Lấy thông tin country mà city thuộc về
+            country_query = {
+                'code': city_result['country']['code']
+            }
+            country_result = self._country_collection.find_one(country_query)
+            
+            # Tổng hợp
+            city_result['country'] = country_result
+            results.append(City.from_json(city_result))
+        
+        return results

@@ -136,6 +136,7 @@ Trong đó ý nghĩa của các thực thể:
 * GeneralWeather đại diện cho các kiểu thời tiết được mã hóa.
 * WeatherStatus đại diện cho tình trạng thời tiết tại 1 thành phố trong 1 ngày.
 ### Mô hình vật lý
+#### Mô hình cho MySQL
 Dựa trên biểu đồ ERD, dữ liệu được chia thành các bảng như sau để đảm bảo chuẩn 3NF.
 1. Bảng city gồm city_id (khóa chính), lat, lon, name, timezone, country_code (khóa ngoài tới bảng country). 
 2. Bảng country gồm country_code (khóa chính), name.
@@ -144,13 +145,74 @@ Dựa trên biểu đồ ERD, dữ liệu được chia thành các bảng như 
 5. Bảng weather_condition gồm city_id và collect_time (khóa chính, đồng thời là khóa ngoài tới weather_status), general_weather_status (khóa chính, đồng thời là khóa ngoài tới general_weather), description.
 
 Các bảng được triển khai trên hệ quản trị MySQL. Việc tạo các bảng tương ứng xem trong file [ddl.sql](ddl.sql).
+#### Mô hình cho MongoDB
+Có 4 collection sau
+1. Collection country, gồm các đối tượng json có dạng sau
+```json
+{
+  "code": "VN",
+  "name": "Viet Nam"
+}
+```
+2. Collection city, gồm các đối tượng json có dạng sau
+```json
+{
+  "city_id": 1,
+  "name": "Ha Noi",
+  "lon": 0.0,
+  "lat": 0.0,
+  "time_zone": 7,
+  "country": {
+    "code": "VN"
+  }
+}
+```
+3. Collection general_weather, gồm các đối tượng json có dạng sau
+```json
+{
+  "status_id": 804,
+  "description": "cloud"
+}
+```
+4. Collection weather, gồm các đối tượng json có dạng sau
+```json
+{
+  "city_id": 1,
+  "collect_time": 2025-02-06 09:07:00,
+  "temp": 273.01,
+  "feels_temp": 273.15,
+  "pressure": 1030,
+  "humidity": 90,
+  "sea_level": 1100,
+  "grnd_level": 960,
+  "visibility": 10000,
+  "wind_speed": 3.12,
+  "wind_deg": 130,
+  "wind_gust": 3.9,
+  "clouds_all": 30,
+  "rain": 39,
+  "sunrise": 2025-02-06 09:07:00,
+  "sunset": 2025-02-06 09:07:00,
+  "aqi": 2,
+  "pm2_5": 3.0,
+  "general_weathers": [
+    {
+      "status_id": 804
+    },
+    {
+      "status_id": 805
+    }
+  ]
+}
+```
 ## Dữ liệu khởi tạo
 
 Dữ liệu trong bảng general_weather được khởi tạo từ trước, được lấy từ link của OpenWeatherMap
 
 [Mã hóa các General Weather Status](https://openweathermap.org/weather-conditions)
 
-Việc thêm vào CSDL có thể xem trong file [init_general_weather.sql](init_general_weather.sql)
+Việc thêm vào CSDL có thể xem trong file [init_general_weather.sql](init_general_weather.sql) đối với MySQL, hoặc 
+[init_general_weather_json.json](init_general_weather_json.json) với MongoDB.
 
 Dữ liệu trong bảng city được lấy và thêm vào (lúc đầu có thể không cần lon và lat) từ đường link [Định danh theo CCCD](https://thuvienphapluat.vn/phap-luat/ho-tro-phap-luat/ma-63-tinh-thanh-pho-su-dung-tren-the-can-cuoc-cong-dan-gan-chip-y-nghia-ma-so-can-cuoc-cong-dan-ga-986546-31326.html#google_vignette)
 
@@ -168,4 +230,5 @@ Trong dự án này, tôi lấy ban đầu 10 thành phố:
 
 `lon` và `lat` của các thành phố khi không có sẵn sẽ được lấy từ api của openweathermap.
 
-Dữ liệu ban đầu có thể được thêm vào từ file [init_city.sql](init_city.sql)
+Dữ liệu ban đầu có thể được thêm vào từ file [init_city.sql](init_city.sql) với MySQL, hoặc
+[init_city_json.json](init_city_json.json) với MongoDB.

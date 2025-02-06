@@ -1,0 +1,10 @@
+[{"city_id":1, "name":"Ha Noi", "lon":null, "lat":null, "time_zone":7, "country": {"code": "VN"}},
+ {"city_id":8, "name":"Tuyen Quang", "lon":null, "lat":null, "time_zone":7, "country": {"code": "VN"}},
+ {"city_id":11, "name":"Dien Bien Phu", "lon":103.019, "lat":21.3875, "time_zone":7, "country": {"code": "VN"}},
+ {"city_id":14, "name":"Son La", "lon":null, "lat":null, "time_zone":7, "country": {"code": "VN"}},
+ {"city_id":25, "name":"Viet Tri", "lon":105.388, "lat":21.3242, "time_zone":7, "country": {"code": "VN"}},
+ {"city_id":40, "name":"Vinh", "lon":null, "lat":null, "time_zone":7, "country": {"code": "VN"}},
+ {"city_id":48, "name":"Da Nang", "lon":108.212, "lat":16.068, "time_zone":7, "country": {"code": "VN"}},
+ {"city_id":79, "name":"Thanh pho Ho Chi Minh", "lon":106.701, "lat":10.7764, "time_zone":7, "country": {"code": "VN"}},
+ {"city_id":92, "name":"Can Tho", "lon":105.788, "lat":10.0364, "time_zone":7, "country": {"code": "VN"}},
+ {"city_id":96, "name":"Ca Mau", "lon":105.152, "lat":9.1782, "time_zone":7, "country": {"code": "VN"}}]

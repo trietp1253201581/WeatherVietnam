@@ -17,7 +17,8 @@ class Country:
     Đại diện cho 1 đối tượng dữ liệu country.
     """
     
-    def __init__(self, code: str, name: str|None = None):
+    def __init__(self, code: str, name: str|None = None,
+                 use_iso_name: bool = False):
         """
         Khởi tạo 1 đối tượng Country.
         
@@ -25,9 +26,13 @@ class Country:
             code (str): Mã của quốc gia theo chuẩn ISO 3166-1, có thể theo Alpha-2 
                 hoặc Alpha-3, tuy nhiên khi khởi tạo sẽ chỉ lưu dưới dạng Alpha-2 
             name (str | None, optional): Tên của quốc gia. Defaults to None.
+            use_iso_name(bool, optional): Sử dụng tên ISO của quốc gia, ghi đè lên trường `name`
+                nếu được sử dụng. Defaults to False
         """
         self.code = code
         self.name = name
+        if use_iso_name:
+            self.name = self.get_iso_name()
         
     @property
     def code(self):
@@ -150,9 +155,38 @@ class Country:
         Chuyển đổi đối tượng này thành 1 tuple theo thứ tự (code, name).
 
         Returns:
-            tuple[str, str|None]: tuple thu được có dạng (code, name).
+            tuple: tuple thu được có dạng (code, name).
         """
         return self.__code, self.__name
+    
+    @staticmethod
+    def from_json(source: dict) -> 'Country':
+        """
+        Chuyển 1 đối tượng JSON sang Country. Đối tượng JSON này phải 
+        chứa các trường code và name, các trường trống mang giá trị None.
+
+        Args:
+            source (dict): Một dict lưu giữ đối tượng JSON nguồn
+
+        Returns:
+            Country: Đối tượng Country thu được
+        """
+        return Country(
+            code=source['code'],
+            name=source['name']
+        )
+    
+    def to_json(self) -> dict:
+        """
+        Chuyển đối tượng này sang một JSON, với các trường thuộc tính tương ứng
+
+        Returns:
+            dict: JSON thu được
+        """
+        return {
+            'code': self.__code,
+            'name': self.__name
+        }
     
 class City:
     """
@@ -280,7 +314,45 @@ class City:
         Chuyển 1 đối tượng City sang một tuple
 
         Returns:
-            tuple[int, str|None, float, float, int, tuple]: tuple tương ứng với thứ tự
+            tuple: tuple tương ứng với thứ tự
                 (city_id, name, lon, lat, time_zone, country)
         """
         return self.__city_id, self.__name, self.__lon, self.__lat, self.__time_zone, self.__country.to_tuple()
+    
+    @staticmethod
+    def from_json(source: dict) -> 'City':
+        """
+        Chuyển 1 đối tượng JSON sang City. Đối tượng JSON này phải 
+        chứa các trường city_id, name, lon, lat, time_zone và country(một dict), 
+        các trường trống mang giá trị None.
+
+        Args:
+            source (dict): Một dict lưu giữ đối tượng JSON nguồn
+
+        Returns:
+            Country: Đối tượng Country thu được
+        """
+        return City(
+            city_id=source['city_id'],
+            name=source['name'],
+            lon=source['lon'],
+            lat=source['lat'],
+            time_zone=source['time_zone'],
+            country=Country.from_json(source['country'])
+        )
+    
+    def to_json(self) -> dict:
+        """
+        Chuyển đối tượng này sang một JSON, với các trường thuộc tính tương ứng
+
+        Returns:
+            dict: JSON thu được
+        """
+        return {
+            'city_id': self.__city_id,
+            'name': self.__name,
+            'lon': self.__lon,
+            'lat': self.__lat,
+            'time_zone': self.__time_zone,
+            'country': self.__country.to_json()
+        }

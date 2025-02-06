@@ -14,12 +14,15 @@ init_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 import sys
 sys.path.append(init_dir)
 
-from typing import Dict
+from typing import Dict, List
 
 import mysql.connector
 from mysql.connector import Error
 
 from db.sql_reader import SQLFileReader
+
+from pymongo import MongoClient
+from pymongo.collection import Collection
 
 class DAOException(Exception):
     """
@@ -43,10 +46,9 @@ class NotExistDataException(DAOException):
     def __init__(self, message: str = "Not found!"):
         """
         Khởi tạo một ngoại lệ có thể xảy ra khi không tìm được dữ liệu.
-        
+
         Args:
-            message (str): Thông điệp lưu giữ thông tin về lỗi/ngoại lệ xảy ra,
-            mặc định là `'Not found!'`
+            message (str, optional): Thông điệp lưu giữ thông tin về lỗi/ngoại lệ xảy ra. Defaults to "Not found!".
         """
         super().__init__(message)
         
@@ -84,10 +86,9 @@ class BasicMySQLDAO:
             db (str): Tên của CSDL.
             user (str): Tên đăng nhập để truy cập vào CSDL, thông thường là `'root'`.
             password (str): Mật khẩu bạn dùng để truy cập CSDL với tên đăng nhập trên.
-
+        
         Raises:
-            DAOException: Nếu như kết nối không thành công, có thể dẫn tới do truyền vào
-            tham số nào đó sai, hoặc CSDL từ chối kết nối của bạn.
+            DAOException: Nếu kết nối có vấn đề
         """
         try:
             self._connection = mysql.connector.connect(
@@ -136,3 +137,66 @@ class BasicMySQLDAO:
         Đóng lại kết nối tới CSDL hiện tại.
         """
         self._connection.close()
+
+class BasicMongoDBDAO:
+    """
+    Cung cấp các phương thức cơ bản mà một DAO với CSDL MongoDB cần phải có.
+    Đó là các phương thức để kết nối tới CSDL.
+    """
+    
+    def __init__(self, host: str, port: int,
+                 db: str, collection: str|list[str]|None,
+                 user: str|None = None, password: str|None = None):
+        """
+        Khởi tạo một DAO kết nối tới MongoDB.
+
+        Args:
+            host (str): Máy chủ CSDL, thông thường là `'localhost'`.
+            port (int): Cổng phục vụ của MongoDB trên máy chủ, thông thường là `27017`.
+            db (str): Cơ sở dữ liệu cần kết nối tới
+            collection (str | list[str] | None): Các collection cần sử dụng, sẽ được lưu trong 1 dict.
+            user (str | None, optional): Tên đăng nhập, yêu cầu khi CSDL phải xác thực. Defaults to None.
+            password (str | None, optional): Mật khẩu, yêu cầu khi CSDL phải xác thực. Defaults to None.
+        """
+        self.connect_(host, port, db, collection, user, password)
+    
+    def connect_(self, host: str, port: int,
+                 db: str, collection: str|list[str]|None,
+                 user: str|None = None, password: str|None = None):
+        """
+        Thiết lập kết nối tới MongoDB.
+
+        Args:
+            host (str): Máy chủ CSDL, thông thường là `'localhost'`.
+            port (int): Cổng phục vụ của MongoDB trên máy chủ, thông thường là `27017`.
+            db (str): Cơ sở dữ liệu cần kết nối tới
+            collection (str | list[str] | None): Các collection cần sử dụng, sẽ được lưu trong 1 dict.
+            user (str | None, optional): Tên đăng nhập, yêu cầu khi CSDL phải xác thực. Defaults to None.
+            password (str | None, optional): Mật khẩu, yêu cầu khi CSDL phải xác thực. Defaults to None.
+            
+        Raises:
+            ValueError: Nếu url là `None` và một trong hai tham số host hoặc port là `None`.
+        """
+        # Tạo URI
+        if user is not None and password is not None:
+            uri = f'mongodb://{user}:{password}@{host}:{port}/'
+        else:
+            uri = f'mongodb://{host}:{port}/'
+            
+        # Lấy kết nối db và các collection được yêu cầu
+        self._client = MongoClient(uri)
+        this_db = self._client[db]
+        
+        self._collections = None
+        if collection is None:
+            return
+        
+        collections: List[str] = []
+        self._collections: Dict[str, Collection] = {}
+        if isinstance(collection, str):
+            collections.append(collection)
+        else:
+            collections = collection
+        
+        for it_collection in collections:
+            self._collections[it_collection] = this_db[it_collection]
