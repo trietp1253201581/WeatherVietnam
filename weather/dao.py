@@ -21,7 +21,7 @@ from datetime import datetime
 
 from weather.model import GeneralWeather, WeatherStatus
 import db.info as dbinfo
-from common.dao import BasicMySQLDAO, DAOException, NotExistDataException
+from common.dao import BasicMySQLDAO, DAOException, NotExistDataException, BasicMongoDBDAO
 
 class BasicGeneralWeatherDAO(ABC):
     """
@@ -380,3 +380,165 @@ class MySQLWeatherStatusDAO(BasicMySQLDAO, BasicWeatherStatusDAO):
             raise DAOException(e.msg)
         finally:
             cursor.close()
+            
+class MongoDBGeneralWeatherDAO(BasicMongoDBDAO, BasicGeneralWeatherDAO):
+    """
+    Triển khai các phương thức thao tác với CSDL các general weather
+    trên CSDL MongoDB
+    """
+    
+    def __init__(self, host: str, port: int,
+                 db: str, user: str|None = None, password: str|None = None):
+        """
+        Khởi tạo một DAO kết nối tới MongoDB để thao tác dữ liệu general weather
+
+        Args:
+            host (str): Máy chủ CSDL, thông thường là `'localhost'`.
+            port (int): Cổng phục vụ của MongoDB trên máy chủ, thông thường là `27017`.
+            db (str): Cơ sở dữ liệu cần kết nối tới
+            user (str | None, optional): Tên đăng nhập, yêu cầu khi CSDL phải xác thực. Defaults to None.
+            password (str | None, optional): Mật khẩu, yêu cầu khi CSDL phải xác thực. Defaults to None.
+        """ 
+        super().__init__(host, port, db, 
+                         collection='general_weather',
+                         user=user, password=password)
+        self._general_weather_collection = self._collections['general_weather']
+        
+    def get(self, status_id: int) -> GeneralWeather:
+        query = {
+            'status_id': status_id
+        }
+        
+        result = self._general_weather_collection.find_one(query)
+        if result is None:
+            raise NotExistDataException()
+        return GeneralWeather.from_json(result)
+    
+    def get_all(self) -> list[GeneralWeather]:
+        results = self._general_weather_collection.find()
+        general_weathers: List[GeneralWeather] = []
+        
+        # Với mỗi result thực hiện chuyển đổi
+        for result in results:
+            general_weathers.append(GeneralWeather.from_json(result))
+        return general_weathers
+
+class MongoDBWeatherStatusDAO(BasicMongoDBDAO, BasicWeatherStatusDAO):
+    """
+    Triển khai các phương thức thao tác với CSDL các weather status
+    trên CSDL MongoDB
+    """
+    
+    def __init__(self, host: str, port: int,
+                 db: str, user: str|None = None, password: str|None = None):
+        """
+        Khởi tạo một DAO kết nối tới MongoDB để thao tác dữ liệu weather status
+
+        Args:
+            host (str): Máy chủ CSDL, thông thường là `'localhost'`.
+            port (int): Cổng phục vụ của MongoDB trên máy chủ, thông thường là `27017`.
+            db (str): Cơ sở dữ liệu cần kết nối tới
+            user (str | None, optional): Tên đăng nhập, yêu cầu khi CSDL phải xác thực. Defaults to None.
+            password (str | None, optional): Mật khẩu, yêu cầu khi CSDL phải xác thực. Defaults to None.
+        """ 
+        super().__init__(host, port, db, 
+                         collection=['general_weather', 'weather_status'],
+                         user=user, password=password)
+        self._general_weather_collection = self._collections['general_weather']
+        self._weather_status_collection = self._collections['weather_status']
+        
+    def get(self, city_id: int, collect_time: datetime) -> WeatherStatus:
+        status_query = {
+            '$and': [
+                {'city_id': city_id},
+                {'collect_time': collect_time}
+            ]
+        }
+        
+        # Lấy các status trước
+        result = self._weather_status_collection.find_one(status_query)
+        if result is None:
+            raise NotExistDataException()
+        
+        # Với mỗi general_weather thì lấy thông tin chi tiết về nó
+        general_weathers_dict: List[dict] = []
+        for item in result['general_weathers']:
+            general_query = {
+                'status_id': item['status_id']
+            }
+            
+            general_result = self._general_weather_collection.find_one(general_query)
+            general_weathers_dict.append(general_result)
+            
+        # Tổng hợp
+        result['general_weathers'] = general_weathers_dict
+        return WeatherStatus.from_json(result)
+        
+    
+    def get_all(self, city_id: int) -> list[WeatherStatus]:
+        status_query = {
+            'city_id': city_id
+        }
+        
+        # Lấy các status trước
+        results = self._weather_status_collection.find(status_query)
+        status_results: List[WeatherStatus] = []
+        
+        # Với mỗi result thì lấy dữ liệu các general weather mà result đó sở hữu
+        for result in results:
+            # Với mỗi general_weather thì lấy thông tin chi tiết về nó
+            general_weathers_dict: List[dict] = []
+            for item in result['general_weathers']:
+                general_query = {
+                    'status_id': item['status_id']
+                }
+                
+                general_result = self._general_weather_collection.find_one(general_query)
+                general_weathers_dict.append(general_result)
+                
+            # Tổng hợp
+            result['general_weathers'] = general_weathers_dict
+            status_results.append(WeatherStatus.from_json(result))
+            
+        return status_results
+        
+    def insert(self, new_weather: WeatherStatus) -> None:
+        query = {
+            '$and': [
+                {'city_id': new_weather.city_id},
+                {'collect_time': new_weather.collect_time}
+            ]
+        }
+        
+        # Lấy values để update
+        values = new_weather.to_json()
+        for item in values['general_weathers']:
+            item.pop('description')
+        update = {
+            "$set": values
+        }
+            
+        result = self._weather_status_collection.update_one(query, update, upsert=True)
+        if result.upserted_id is None and result.matched_count == 0:
+            raise DAOException("Failed inserted!")
+    
+    def delete(self, city_id: int, collect_time: datetime) -> None:
+        query = {
+            '$and': [
+                {'city_id': city_id},
+                {'collect_time': collect_time}
+            ]
+        }
+        
+        result = self._weather_status_collection.delete_one(query)
+        if result.deleted_count == 0:
+            raise DAOException("Failed deleted!")
+    
+    def delete_all(self, city_id: int) -> None:
+        query = {
+            'city_id': city_id
+        }
+        
+        result = self._weather_status_collection.delete_many(query)
+        if result.deleted_count == 0:
+            raise DAOException("Failed deleted!")

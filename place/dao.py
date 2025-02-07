@@ -415,11 +415,11 @@ class MongoDBCountryDAO(BasicMongoDBDAO, BasicCountryDAO):
             raise DAOException("Failed insert")
     
     def delete(self, code: str) -> None:
-        values = {
+        query = {
             'code': code
         }
         
-        result = self._country_collection.delete_one(values)
+        result = self._country_collection.delete_one(query)
         if result.deleted_count == 0:
             raise DAOException("Failed deleted!")
         
@@ -502,11 +502,11 @@ class MongoDBCityDAO(BasicMongoDBDAO, BasicCityDAO):
             raise Exception("Failed insert city!")
         
     def delete(self, city_id: int) -> None:
-        values = {
+        query = {
             'city_id': city_id
         }
         
-        result = self._city_collection.delete_one(values)
+        result = self._city_collection.delete_one(query)
         if result.deleted_count == 0:
             raise DAOException("Failed deleted!")
     

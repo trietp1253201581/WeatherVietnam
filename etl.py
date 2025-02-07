@@ -17,12 +17,12 @@ sys.path.append(init_dir)
 from typing import List, Literal
 
 #Place
-from place.dao import MySQLCityDAO
+from place.dao import MySQLCityDAO, MongoDBCityDAO
 from place.business import get_city
 
 #Weather
 from weather.model import WeatherStatus
-from weather.dao import MySQLWeatherStatusDAO
+from weather.dao import MySQLWeatherStatusDAO, MongoDBWeatherStatusDAO
 from weather.business import extract_from_open_weather, transform, load
 
 import datetime
@@ -35,10 +35,15 @@ logging.basicConfig(filename='etl_log.log', level=logging.INFO,
                     datefmt='%Y-%m-%d %H:%M:%S')
 
 import schedule
+from functools import partial
 
-def weather_vietnam_etl():
+def weather_vietnam_etl(dbms: Literal['MySQL', 'MongoDB'] = 'MySQL'):
     """
     Quy trình ETL thủ công để làm việc với dữ liệu thời tiết các thành phố Việt Nam
+
+    Args:
+        dbms (Literal[&#39;MySQL&#39;, &#39;MongoDB&#39;], optional): Hệ quản trị CSDL
+            được sử dụng để lưu trữ CSDL. Defaults to 'MySQL'.
     """
     # Bắt đầu
     logging.info('<<ETL Process>>')
@@ -46,8 +51,12 @@ def weather_vietnam_etl():
     
     # Cấu hình các DAO
     logging.info('Config data access object...')
-    city_dao = MySQLCityDAO('localhost', 'weather_vietnam', 'root', 'Asensio1234@')
-    weather_dao = MySQLWeatherStatusDAO('localhost', 'weather_vietnam', 'root', 'Asensio1234@')
+    if dbms == 'MySQL':
+        city_dao = MySQLCityDAO('localhost', 'weather_vietnam', 'root', 'Asensio1234@')
+        weather_dao = MySQLWeatherStatusDAO('localhost', 'weather_vietnam', 'root', 'Asensio1234@')
+    else:
+        city_dao = MongoDBCityDAO('localhost', 27017, 'weather_vietnam')
+        weather_dao = MongoDBWeatherStatusDAO('localhost', 27017, 'weather_vietnam')
     
     # Lấy dữ liệu tất cả các thành phố
     logging.info('Getting data of all cities of Viet Nam...')
@@ -124,55 +133,58 @@ def weather_vietnam_etl():
 
 _job_cnt = 0
     
-def _weather_viet_nam_etl_limited():
+def _weather_viet_nam_etl_limited(dbms: Literal['MySQL', 'MongoDB'] = 'MySQL'):
     """
     Quy trình được thực hiện cùng với việc tăng bộ đếm Job
+    
+    Args:
+        dbms (Literal[&#39;MySQL&#39;, &#39;MongoDB&#39;], optional): Hệ quản trị CSDL
+            được sử dụng để lưu trữ CSDL. Defaults to 'MySQL'.
     """
     global _job_cnt
 
     _job_cnt += 1
     logging.info(f'---Job {_job_cnt}---')
-    weather_vietnam_etl()
+    weather_vietnam_etl(dbms)
+    
+def _supported_minutes_job(frequent: int = 1,
+                           dbms: Literal['MySQL', 'MongoDB'] = 'MySQL'):
+    """
+    Quy trình ETL hỗ trợ check tròn phút cộng với tăng bộ đếm
 
-def _supported_3_minutes_job():
-    """
-    Quy trình ETL hỗ trợ check tròn 3 phút
-    """
-    now = datetime.datetime.now()
-    if now.minute % 3 == 0:
-        _weather_viet_nam_etl_limited()
-
-def _supported_10_minutes_job():
-    """
-    Quy trình ETL hỗ trợ check tròn 10 phút
+    Args:
+        frequent (int, optional): Số phút tròn để thực hiện (1-59).
+            Job sẽ được thực hiện vào thời điểm mà phút chia hết
+            cho frequent. Defaults to 1.
+        dbms (Literal[&#39;MySQL&#39;, &#39;MongoDB&#39;], optional): _description_. Defaults to 'MySQL'.
     """
     now = datetime.datetime.now()
-    if now.minute % 10 == 0:
-        _weather_viet_nam_etl_limited()
+    if now.minute % frequent == 0:
+        _weather_viet_nam_etl_limited(dbms)
         
-def _supported_30_minutes_job():
-    """
-    Quy trình ETL hỗ trợ check tròn 30 phút
-    """
-    now = datetime.datetime.now()
-    if now.minute % 30 == 0:
-        _weather_viet_nam_etl_limited()
-        
-def auto_weather_vietnam_etl(type: Literal['daily', 'hourly', '30-min', '10-min', '3-min'] = '10-min',
+def auto_weather_vietnam_etl(type: Literal['daily', 'hourly', 'minutely'] = 'hourly',
                              job_limits: int|None = None,
-                             daily_collect_time: datetime.time|list[datetime.time]|None = None):
+                             daily_collect_time: datetime.time|list[datetime.time]|None = None,
+                             minute_frequent: int|None = None,
+                             dbms: Literal['MySQL', 'MongoDB'] = 'MySQL'):
     """
     Quy trình ETL tự động để thao tác với dữ liệu thời tiết các thành phố ở Việt Nam
 
     Args:
-        type (Literal[&#39;daily&#39;, &#39;hourly&#39;, &#39;30, optional): Tần suất lấy dữ liệu. Defaults to '10-min'.
-            `'daily'`: Hàng ngày, có thể vào các khung giờ nhất định, lúc này tham số `daily_collect_time` phải được sử dụng.
-            `'hourly'`: Hàng giờ, sẽ lấy chẵn giờ, tức là vào 0h, 1h, 2h,...
-            `'30-min'`: Cách đều 30 phút, bắt đầu từ 0h (0h, 0h30, 1h, 1h30, ...)
-            `'10-min'`: Cách đều 10 phút, bắt đầu từ 0h (0h, 0h10, 0h20, ...)
-            `'3-min'`: Cách đều 3 phút, bắt đầu từ 0h (0h, 0h3, 0h6, 0h9, ...)
+        type (Literal[&#39;daily&#39;, &#39;hourly&#39;, &#39;minutely&#39;, optional): Tần suất lấy dữ liệu. Defaults to '10-min'.
+            `'daily'` 
+                Hàng ngày, có thể vào các khung giờ nhất định, lúc này tham số `daily_collect_time` phải được sử dụng.
+            `'hourly'`
+                Hàng giờ, sẽ lấy chẵn giờ, tức là vào 0h, 1h, 2h,....
+            `'minutely'`
+                Tròn phút, sẽ lấy vào các phút chia hết cho minute_frequent. Lúc này yêu cầu
+                tham số `minute_frequent`.
         job_limits (int | None, optional): Giới hạn số công việc thực hiện. Defaults to None.
-        daily_collect_time (datetime.time | list[datetime.time] | None, optional): _description_. Defaults to None.
+        daily_collect_time (datetime.time | list[datetime.time] | None, optional): Thời
+            điểm lấy dữ liệu hàng ngày. Defaults to None.
+        minute_frequent (int | None, optional): Số phút tròn để lấy dữ liệu. Defaults to None.
+        dbms (Literal[&#39;MySQL&#39;, &#39;MongoDB&#39;], optional): Hệ quản trị CSDL
+            được sử dụng để lưu trữ CSDL. Defaults to 'MySQL'.
 
     Raises:
         ValueError: Khi chọn `type='daily'` mà không có tham số `daily_collect_time`.
@@ -192,15 +204,16 @@ def auto_weather_vietnam_etl(type: Literal['daily', 'hourly', '30-min', '10-min'
             daily_collect_times = daily_collect_time
         for collect_time in daily_collect_times:
             collect_time_str = collect_time.strftime("%H:%M")
-            schedule.every().day.at(collect_time_str).do(_weather_viet_nam_etl_limited).tag(type)
+            job = partial(_weather_viet_nam_etl_limited, dbms)
+            schedule.every().day.at(collect_time_str).do(job).tag(type)
     elif type == 'hourly':
-        schedule.every().hour.at(":00").do(_weather_viet_nam_etl_limited).tag(type)
-    elif type == '30-min':
-        schedule.every().minute.at(":00").do(_supported_30_minutes_job).tag(type)
-    elif type == '10-min':
-        schedule.every().minute.at(":00").do(_supported_10_minutes_job).tag(type)
-    elif type == '3-min':
-        schedule.every().minute.at(":00").do(_supported_3_minutes_job).tag(type)
+        job = partial(_weather_viet_nam_etl_limited, dbms)
+        schedule.every().hour.at(":00").do(job).tag(type)
+    elif type == 'minutely':
+        job = partial(_supported_minutes_job, minute_frequent, dbms)
+        schedule.every().minute.at(":00").do(job).tag(type)
+    else:
+        raise ValueError("Not supported type")
     
     # Thực hiện các job theo kế hoạch định trước, chỉ dừng khi đạt giới hạn số lượng.
     while True:

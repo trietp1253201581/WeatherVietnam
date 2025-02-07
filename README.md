@@ -5,20 +5,22 @@ Có thể cần cài đặt các thư viện logging, typing, json, requests, sc
 pip install logging, typing, json, requests, schedule, mysql-connector
 ```
 ## Cấu trúc dự án
-Bao gồm các module và file sau, nhiệm vụ tương ứng đã có trong từng module:
+Bao gồm các module và file sau, chi tiết nhiệm vụ tương ứng đã có trong từng module:
 * [main.py](main.py) (file chính để chạy)
-* [etl.py](etl.py)
-* [etl_log.log](etl_log.log) (ghi lại log các quy trình etl)
-* `common`:
-  * [dao.py](common/dao.py)
-* `place`:
+* [etl.py](etl.py) (chứa các hàm chính để thực hiện nghiệp vụ ETL)
+* [etl_log.log](etl_log.log) (ghi lại log các quy trình ETL)
+* `common`: 
+  * [dao.py](common/dao.py) (chứa các basic dao để kết nối với các DBMS như MySQL và MongoDB)
+* `place`: Các nghiệp vụ liên quan tới địa lý.
   * [model.py](place/model.py)
   * [dao.py](place/dao.py)
   * [business.py](place/business.py)
-* `weather`:
+* `weather`: Các nghiệp vụ liên quan tới dữ liệu thời tiết.
   * [model.py](weather/model.py)
   * [dao.py](weather/dao.py)
   * [business.py](weather/business.py)
+
+Với `place` và `weather` thì `model`, `dao`, `business` lần lượt đại diện cho các mô hình logic, các DAO và các hàm phục vụ nghiệp vụ của các module này.
 ## Dữ liệu
 Dữ liệu về thời tiết của các thành phố ở Việt Nam được lấy từ API của OpenWeatherMap.
 
@@ -63,22 +65,23 @@ radon cc . -a -s
 Kết quả thu được
 ```bash
 etl.py
-    F 161:0 auto_weather_vietnam_etl - C (12)
-    F 39:0 weather_vietnam_etl - B (8)
-    F 137:0 _supported_3_minutes_job - A (2)
-    F 145:0 _supported_10_minutes_job - A (2)
-    F 153:0 _supported_30_minutes_job - A (2)
-    F 127:0 _weather_viet_nam_etl_limited - A (1)
+    F 165:0 auto_weather_vietnam_etl - B (10)
+    F 40:0 weather_vietnam_etl - B (9)
+    F 150:0 _supported_minutes_job - A (2)
+    F 136:0 _weather_viet_nam_etl_limited - A (1)
 common\dao.py
-    M 102:4 BasicMySQLDAO.get_sql_file_reader_ - A (5)
-    C 53:0 BasicMySQLDAO - A (3)
-    C 24:0 DAOException - A (2)
-    C 38:0 NotExistDataException - A (2)
-    M 77:4 BasicMySQLDAO.connect_ - A (2)
-    M 29:4 DAOException.__init__ - A (1)
-    M 43:4 NotExistDataException.__init__ - A (1)
-    M 60:4 BasicMySQLDAO.__init__ - A (1)
-    M 134:4 BasicMySQLDAO.close_connection - A (1)
+    M 163:4 BasicMongoDBDAO.connect_ - B (6)
+    M 103:4 BasicMySQLDAO.get_sql_file_reader_ - A (5)
+    C 141:0 BasicMongoDBDAO - A (5)
+    C 55:0 BasicMySQLDAO - A (3)
+    C 27:0 DAOException - A (2)
+    C 41:0 NotExistDataException - A (2)
+    M 79:4 BasicMySQLDAO.connect_ - A (2)
+    M 32:4 DAOException.__init__ - A (1)
+    M 46:4 NotExistDataException.__init__ - A (1)
+    M 62:4 BasicMySQLDAO.__init__ - A (1)
+    M 135:4 BasicMySQLDAO.close_connection - A (1)
+    M 147:4 BasicMongoDBDAO.__init__ - A (1)
 db\info.py
     C 21:0 CityEnableQueries - A (1)
     C 30:0 CountryEnableQueries - A (1)
@@ -90,13 +93,6 @@ db\sql_reader.py
     C 28:0 SQLFileReader - A (4)
     C 13:0 NotSupportedQueryException - A (2)
     M 93:4 SQLFileReader.get_query_of - A (2)
-    M 18:4 NotSupportedQueryException.__init__ - A (1)
-    M 33:4 SQLFileReader.__init__ - A (1)
-    M 84:4 SQLFileReader.get_enable_queries - A (1)
-    M 110:4 SQLFileReader.clear - A (1)
-place\business.py
-    F 92:0 get_city - B (8)
-    F 143:0 delete_city - B (6)
     F 48:0 _get_city - A (4)
     F 71:0 _get_all_of_country - A (4)
     F 126:0 insert_city - A (3)
@@ -106,14 +102,23 @@ place\dao.py
     M 242:4 MySQLCityDAO.get - B (8)
     C 218:0 MySQLCityDAO - A (5)
     M 288:4 MySQLCityDAO.insert - A (5)
+    M 450:4 MongoDBCityDAO.get - A (5)
+    M 477:4 MongoDBCityDAO.insert - A (5)
     C 65:0 MySQLCountryDAO - A (4)
     M 86:4 MySQLCountryDAO.get - A (4)
     M 114:4 MySQLCountryDAO.insert - A (4)
     M 136:4 MySQLCountryDAO.delete - A (4)
     M 316:4 MySQLCityDAO.delete - A (4)
     M 338:4 MySQLCityDAO.get_all - A (4)
+    C 426:0 MongoDBCityDAO - A (4)
+    C 372:0 MongoDBCountryDAO - A (3)
+    M 405:4 MongoDBCountryDAO.insert - A (3)
     C 26:0 BasicCountryDAO - A (2)
     C 162:0 BasicCityDAO - A (2)
+    M 395:4 MongoDBCountryDAO.get - A (2)
+    M 417:4 MongoDBCountryDAO.delete - A (2)
+    M 504:4 MongoDBCityDAO.delete - A (2)
+    M 513:4 MongoDBCityDAO.get_all - A (2)
     M 33:4 BasicCountryDAO.get - A (1)
     M 47:4 BasicCountryDAO.insert - A (1)
     M 57:4 BasicCountryDAO.delete - A (1)
@@ -123,37 +128,32 @@ place\dao.py
     M 196:4 BasicCityDAO.delete - A (1)
     M 205:4 BasicCityDAO.get_all - A (1)
     M 224:4 MySQLCityDAO.__init__ - A (1)
+    M 378:4 MongoDBCountryDAO.__init__ - A (1)
+    M 432:4 MongoDBCityDAO.__init__ - A (1)
 place\model.py
-    M 41:4 Country.code - A (4)
-    M 60:4 Country.get_code_with_type - A (4)
-    M 239:4 City.__str__ - A (4)
-    C 15:0 Country - A (3)
-    M 125:4 Country.from_tuple - A (3)
-    M 227:4 City.time_zone - A (3)
-    M 251:4 City.from_tuple - A (3)
-    M 85:4 Country.get_iso_name - A (2)
-    M 101:4 Country.get_offical_name - A (2)
-    C 157:0 City - A (2)
-    M 20:4 Country.__init__ - A (1)
-    M 33:4 Country.code - A (1)
-    M 37:4 Country.name - A (1)
-    M 57:4 Country.name - A (1)
-    M 117:4 Country.__str__ - A (1)
-    M 148:4 Country.to_tuple - A (1)
-    M 161:4 City.__init__ - A (1)
-    M 187:4 City.city_id - A (1)
-    M 191:4 City.name - A (1)
-    M 195:4 City.lat - A (1)
-    M 199:4 City.lon - A (1)
-    M 203:4 City.time_zone - A (1)
-    M 207:4 City.country - A (1)
-    M 211:4 City.city_id - A (1)
-    M 215:4 City.name - A (1)
-    M 219:4 City.lat - A (1)
-    M 223:4 City.lon - A (1)
-    M 233:4 City.country - A (1)
-    M 236:4 City.get_coord - A (1)
-    M 278:4 City.to_tuple - A (1)
+    M 46:4 Country.code - A (4)
+    M 65:4 Country.get_code_with_type - A (4)
+    M 273:4 City.__str__ - A (4)
+    M 130:4 Country.from_tuple - A (3)
+    M 261:4 City.time_zone - A (3)
+    M 285:4 City.from_tuple - A (3)
+    C 15:0 Country - A (2)
+    M 20:4 Country.__init__ - A (2)
+    M 90:4 Country.get_iso_name - A (2)
+    M 106:4 Country.get_offical_name - A (2)
+    C 191:0 City - A (2)
+    M 38:4 Country.code - A (1)
+    M 42:4 Country.name - A (1)
+    M 62:4 Country.name - A (1)
+    M 122:4 Country.__str__ - A (1)
+    M 153:4 Country.to_tuple - A (1)
+    M 163:4 Country.from_json - A (1)
+    M 257:4 City.lon - A (1)
+    M 267:4 City.country - A (1)
+    M 270:4 City.get_coord - A (1)
+    M 312:4 City.to_tuple - A (1)
+    M 323:4 City.from_json - A (1)
+    M 344:4 City.to_json - A (1)
 weather\business.py
     F 67:0 transform - A (4)
     F 132:0 get_status - A (4)
@@ -170,8 +170,14 @@ weather\dao.py
     M 99:4 MySQLGeneralWeatherDAO.get_all - A (4)
     M 340:4 MySQLWeatherStatusDAO.delete - A (4)
     M 362:4 MySQLWeatherStatusDAO.delete_all - A (4)
-    C 26:0 BasicGeneralWeatherDAO - A (2)
-    C 123:0 BasicWeatherStatusDAO - A (2)
+    M 505:4 MongoDBWeatherStatusDAO.insert - A (4)
+    C 384:0 MongoDBGeneralWeatherDAO - A (3)
+    C 426:0 MongoDBWeatherStatusDAO - A (3)
+    M 450:4 MongoDBWeatherStatusDAO.get - A (3)
+    M 478:4 MongoDBWeatherStatusDAO.get_all - A (3)
+    M 417:4 MongoDBGeneralWeatherDAO.get_all - A (2)
+    M 525:4 MongoDBWeatherStatusDAO.delete - A (2)
+    M 537:4 MongoDBWeatherStatusDAO.delete_all - A (2)
     M 33:4 BasicGeneralWeatherDAO.get - A (1)
     M 46:4 BasicGeneralWeatherDAO.get_all - A (1)
     M 61:4 MySQLGeneralWeatherDAO.__init__ - A (1)
@@ -181,27 +187,33 @@ weather\dao.py
     M 167:4 BasicWeatherStatusDAO.delete - A (1)
     M 178:4 BasicWeatherStatusDAO.delete_all - A (1)
     M 193:4 MySQLWeatherStatusDAO.__init__ - A (1)
+    M 390:4 MongoDBGeneralWeatherDAO.__init__ - A (1)
+    M 432:4 MongoDBWeatherStatusDAO.__init__ - A (1)
 weather\model.py
-    M 294:4 WeatherStatus.wind_deg - A (4)
-    M 310:4 WeatherStatus.clouds_all - A (4)
-    M 334:4 WeatherStatus.aqi - A (4)
-    M 384:4 WeatherStatus.from_tuple - A (4)
+    M 324:4 WeatherStatus.wind_deg - A (4)
+    M 340:4 WeatherStatus.clouds_all - A (4)
+    M 372:4 WeatherStatus.aqi - A (4)
+    M 422:4 WeatherStatus.from_tuple - A (4)
     M 54:4 GeneralWeather.from_tuple - A (3)
-    M 236:4 WeatherStatus.temp - A (3)
-    M 246:4 WeatherStatus.feels_temp - A (3)
-    M 256:4 WeatherStatus.pressure - A (3)
-    M 266:4 WeatherStatus.sea_level - A (3)
-    M 272:4 WeatherStatus.grnd_level - A (3)
-    M 278:4 WeatherStatus.visibility - A (3)
-    M 284:4 WeatherStatus.wind_speed - A (3)
-    M 300:4 WeatherStatus.wind_gust - A (3)
-    M 316:4 WeatherStatus.rain - A (3)
-    M 340:4 WeatherStatus.pm2_5 - A (3)
+    M 266:4 WeatherStatus.temp - A (3)
+    M 276:4 WeatherStatus.feels_temp - A (3)
+    M 286:4 WeatherStatus.pressure - A (3)
+    M 296:4 WeatherStatus.sea_level - A (3)
+    M 302:4 WeatherStatus.grnd_level - A (3)
+    M 308:4 WeatherStatus.visibility - A (3)
+    M 314:4 WeatherStatus.wind_speed - A (3)
+    M 330:4 WeatherStatus.wind_gust - A (3)
+    M 346:4 WeatherStatus.rain - A (3)
+    M 378:4 WeatherStatus.pm2_5 - A (3)
     C 14:0 GeneralWeather - A (2)
-    C 85:0 WeatherStatus - A (2)
-    M 354:4 WeatherStatus.max_decimal - A (2)
-    M 359:4 WeatherStatus.__str__ - A (2)
-    M 426:4 WeatherStatus.to_tuple - A (2)
+    C 114:0 WeatherStatus - A (2)
+    M 356:4 WeatherStatus.sunrise - A (2)
+    M 364:4 WeatherStatus.sunset - A (2)
+    M 392:4 WeatherStatus.max_decimal - A (2)
+    M 397:4 WeatherStatus.__str__ - A (2)
+    M 464:4 WeatherStatus.to_tuple - A (2)
+    M 481:4 WeatherStatus.from_json - A (2)
+    M 516:4 WeatherStatus.to_json - A (2)
     M 19:4 GeneralWeather.__init__ - A (1)
     M 31:4 GeneralWeather.status_id - A (1)
     M 35:4 GeneralWeather.description - A (1)
@@ -209,36 +221,88 @@ weather\model.py
     M 43:4 GeneralWeather.description - A (1)
     M 46:4 GeneralWeather.__str__ - A (1)
     M 76:4 GeneralWeather.to_tuple - A (1)
-    M 90:4 WeatherStatus.__init__ - A (1)
-    M 148:4 WeatherStatus.city_id - A (1)
-    M 152:4 WeatherStatus.collect_time - A (1)
-    M 156:4 WeatherStatus.temp - A (1)
-    M 160:4 WeatherStatus.feels_temp - A (1)
-    M 164:4 WeatherStatus.pressure - A (1)
-    M 168:4 WeatherStatus.humidity - A (1)
-    M 172:4 WeatherStatus.sea_level - A (1)
-    M 176:4 WeatherStatus.grnd_level - A (1)
-    M 180:4 WeatherStatus.visibility - A (1)
-    M 184:4 WeatherStatus.wind_speed - A (1)
-    M 188:4 WeatherStatus.wind_deg - A (1)
-    M 192:4 WeatherStatus.wind_gust - A (1)
-    M 196:4 WeatherStatus.clouds_all - A (1)
-    M 200:4 WeatherStatus.rain - A (1)
-    M 204:4 WeatherStatus.sunrise - A (1)
-    M 208:4 WeatherStatus.sunset - A (1)
-    M 212:4 WeatherStatus.aqi - A (1)
-    M 216:4 WeatherStatus.pm2_5 - A (1)
-    M 220:4 WeatherStatus.general_weathers - A (1)
-    M 224:4 WeatherStatus.max_decimal - A (1)
-    M 228:4 WeatherStatus.city_id - A (1)
-    M 232:4 WeatherStatus.collect_time - A (1)
-    M 262:4 WeatherStatus.humidity - A (1)
-    M 326:4 WeatherStatus.sunrise - A (1)
-    M 330:4 WeatherStatus.sunset - A (1)
-    M 350:4 WeatherStatus.general_weathers - A (1)
+    M 86:4 GeneralWeather.from_json - A (1)
+    M 102:4 GeneralWeather.to_json - A (1)
+    M 119:4 WeatherStatus.__init__ - A (1)
+    M 177:4 WeatherStatus.city_id - A (1)
+    M 181:4 WeatherStatus.collect_time - A (1)
+    M 185:4 WeatherStatus.temp - A (1)
+    M 189:4 WeatherStatus.feels_temp - A (1)
+    M 193:4 WeatherStatus.pressure - A (1)
+    M 197:4 WeatherStatus.humidity - A (1)
+    M 201:4 WeatherStatus.sea_level - A (1)
+    M 205:4 WeatherStatus.grnd_level - A (1)
+    M 209:4 WeatherStatus.visibility - A (1)
+    M 213:4 WeatherStatus.wind_speed - A (1)
+    M 217:4 WeatherStatus.wind_deg - A (1)
+    M 221:4 WeatherStatus.wind_gust - A (1)
+    M 225:4 WeatherStatus.clouds_all - A (1)
+    M 229:4 WeatherStatus.rain - A (1)
+    M 233:4 WeatherStatus.sunrise - A (1)
+    M 237:4 WeatherStatus.sunset - A (1)
+    M 241:4 WeatherStatus.aqi - A (1)
+    M 221:4 WeatherStatus.wind_gust - A (1)
+    M 225:4 WeatherStatus.clouds_all - A (1)
+    M 229:4 WeatherStatus.rain - A (1)
+    M 233:4 WeatherStatus.sunrise - A (1)
+    M 237:4 WeatherStatus.sunset - A (1)
+    M 241:4 WeatherStatus.aqi - A (1)
+    M 245:4 WeatherStatus.pm2_5 - A (1)
+    M 249:4 WeatherStatus.general_weathers - A (1)
+    M 253:4 WeatherStatus.max_decimal - A (1)
+    M 257:4 WeatherStatus.city_id - A (1)
+    M 261:4 WeatherStatus.collect_time - A (1)
+    M 221:4 WeatherStatus.wind_gust - A (1)
+    M 225:4 WeatherStatus.clouds_all - A (1)
+    M 229:4 WeatherStatus.rain - A (1)
+    M 233:4 WeatherStatus.sunrise - A (1)
+    M 237:4 WeatherStatus.sunset - A (1)
+    M 241:4 WeatherStatus.aqi - A (1)
+    M 245:4 WeatherStatus.pm2_5 - A (1)
+    M 249:4 WeatherStatus.general_weathers - A (1)
+    M 253:4 WeatherStatus.max_decimal - A (1)
+    M 257:4 WeatherStatus.city_id - A (1)
+    M 221:4 WeatherStatus.wind_gust - A (1)
+    M 225:4 WeatherStatus.clouds_all - A (1)
+    M 229:4 WeatherStatus.rain - A (1)
+    M 233:4 WeatherStatus.sunrise - A (1)
+    M 237:4 WeatherStatus.sunset - A (1)
+    M 241:4 WeatherStatus.aqi - A (1)
+    M 245:4 WeatherStatus.pm2_5 - A (1)
+    M 225:4 WeatherStatus.clouds_all - A (1)
+    M 229:4 WeatherStatus.rain - A (1)
+    M 233:4 WeatherStatus.sunrise - A (1)
+    M 237:4 WeatherStatus.sunset - A (1)
+    M 241:4 WeatherStatus.aqi - A (1)
+    M 245:4 WeatherStatus.pm2_5 - A (1)
+    M 249:4 WeatherStatus.general_weathers - A (1)
+    M 237:4 WeatherStatus.sunset - A (1)
+    M 241:4 WeatherStatus.aqi - A (1)
+    M 245:4 WeatherStatus.pm2_5 - A (1)
+    M 249:4 WeatherStatus.general_weathers - A (1)
+    M 253:4 WeatherStatus.max_decimal - A (1)
+    M 257:4 WeatherStatus.city_id - A (1)
+    M 241:4 WeatherStatus.aqi - A (1)
+    M 245:4 WeatherStatus.pm2_5 - A (1)
+    M 249:4 WeatherStatus.general_weathers - A (1)
+    M 253:4 WeatherStatus.max_decimal - A (1)
+    M 257:4 WeatherStatus.city_id - A (1)
+    M 261:4 WeatherStatus.collect_time - A (1)
+    M 245:4 WeatherStatus.pm2_5 - A (1)
+    M 249:4 WeatherStatus.general_weathers - A (1)
+    M 253:4 WeatherStatus.max_decimal - A (1)
+    M 257:4 WeatherStatus.city_id - A (1)
+    M 261:4 WeatherStatus.collect_time - A (1)
+    M 253:4 WeatherStatus.max_decimal - A (1)
+    M 257:4 WeatherStatus.city_id - A (1)
+    M 261:4 WeatherStatus.collect_time - A (1)
+    M 261:4 WeatherStatus.collect_time - A (1)
+    M 292:4 WeatherStatus.humidity - A (1)
+    M 292:4 WeatherStatus.humidity - A (1)
+    M 388:4 WeatherStatus.general_weathers - A (1)
 
-164 blocks (classes, functions, methods) analyzed.
-Average complexity: A (2.1951219512195124)
+195 blocks (classes, functions, methods) analyzed.
+Average complexity: A (2.230769230769231)
 ```
 
 ### Số lượng dòng code
@@ -249,21 +313,21 @@ radon raw . -s
 Kết quả thu được
 ```bash
 etl.py
-    LOC: 214
-    LLOC: 134
-    SLOC: 130
+    LOC: 227
+    LLOC: 130
+    SLOC: 131
     Comments: 19
     Single comments: 19
-    Multi: 38
-    Blank: 27
+    Multi: 49
+    Blank: 28
     - Comment Stats
-        (C % L): 9%
+        (C % L): 8%
         (C % S): 15%
-        (C + M % L): 27%
+        (C + M % L): 30%
 main.py
-    LOC: 2
-    LLOC: 2
-    SLOC: 2
+    LOC: 8
+    LLOC: 3
+    SLOC: 8
     Comments: 0
     Single comments: 0
     Multi: 0
@@ -273,17 +337,17 @@ main.py
         (C % S): 0%
         (C + M % L): 0%
 common\dao.py
-    LOC: 138
-    LLOC: 52
-    SLOC: 46
-    Comments: 1
-    Single comments: 1
-    Multi: 68
-    Blank: 23
+    LOC: 202
+    LLOC: 80
+    SLOC: 73
+    Comments: 3
+    Single comments: 3
+    Multi: 92
+    Blank: 34
     - Comment Stats
         (C % L): 1%
-        (C % S): 2%
-        (C + M % L): 50%
+        (C % S): 4%
+        (C + M % L): 47%
 common\__init__.py
     LOC: 14
     LLOC: 3
@@ -345,29 +409,29 @@ place\business.py
         (C % S): 3%
         (C + M % L): 42%
 place\dao.py
-    LOC: 370
-    LLOC: 190
-    SLOC: 197
-    Comments: 24
-    Single comments: 24
-    Multi: 89
-    Blank: 60
+    LOC: 533
+    LLOC: 277
+    SLOC: 299
+    Comments: 34
+    Single comments: 34
+    Multi: 115
+    Blank: 85
     - Comment Stats
         (C % L): 6%
-        (C % S): 12%
-        (C + M % L): 31%
+        (C % S): 11%
+        (C + M % L): 28%
 place\model.py
-    LOC: 286
-    LLOC: 144
-    SLOC: 147
+    LOC: 358
+    LLOC: 162
+    SLOC: 180
     Comments: 3
     Single comments: 3
-    Multi: 88
-    Blank: 48
+    Multi: 117
+    Blank: 58
     - Comment Stats
         (C % L): 1%
         (C % S): 2%
-        (C + M % L): 32%
+        (C + M % L): 34%
 place\__init__.py
     LOC: 15
     LLOC: 3
@@ -393,29 +457,29 @@ weather\business.py
         (C % S): 13%
         (C + M % L): 36%
 weather\dao.py
-    LOC: 382
-    LLOC: 193
-    SLOC: 206
-    Comments: 30
-    Single comments: 30
-    Multi: 85
-    Blank: 61
+    LOC: 544
+    LLOC: 275
+    SLOC: 304
+    Comments: 39
+    Single comments: 39
+    Multi: 111
+    Blank: 90
     - Comment Stats
-        (C % L): 8%
-        (C % S): 15%
-        (C + M % L): 30%
+        (C % L): 7%
+        (C % S): 13%
+        (C + M % L): 28%
 weather\model.py
-    LOC: 440
-    LLOC: 267
-    SLOC: 295
+    LOC: 543
+    LLOC: 289
+    SLOC: 360
     Comments: 0
     Single comments: 0
-    Multi: 79
-    Blank: 66
+    Multi: 107
+    Blank: 76
     - Comment Stats
         (C % L): 0%
         (C % S): 0%
-        (C + M % L): 18%
+        (C + M % L): 20%
 weather\__init__.py
     LOC: 3
     LLOC: 2
@@ -429,15 +493,25 @@ weather\__init__.py
         (C % S): 0%
         (C + M % L): 0%
 ** Total **
-    LOC: 2383
-    LLOC: 1207
-    SLOC: 1252
-    Comments: 94
-    Single comments: 94
-    Multi: 659
-    Blank: 378
+    LOC: 2966
+    LLOC: 1441
+    SLOC: 1584
+    Comments: 115
+    Single comments: 115
+    Multi: 803
+    Blank: 464
     - Comment Stats
         (C % L): 4%
-        (C % S): 8%
-        (C + M % L): 32%
+        (C % S): 7%
+        (C + M % L): 31%
 ```
+Trong đó
+* LOC (Lines of code): Tổng số dòng mã trong dự án, bao gồm cả mã, nhận xét (comments), và dòng trống (blank lines).
+* LLOC (Logical lines of code): Tổng số dòng mã logic. Đây là các dòng thực sự thực hiện các lệnh trong chương trình, không bao gồm nhận xét hoặc dòng trống.
+* SLOC (Source lines of code): Tổng số dòng mã nguồn. Bao gồm các dòng mã và nhận xét, nhưng không bao gồm dòng trống.
+* Single comments: Tổng số dòng nhận xét đơn (các dòng nhận xét bắt đầu bằng #).
+* Multi: Tổng số dòng nằm trong các khối nhận xét đa dòng (ví dụ: nhận xét trong các chuỗi ba dấu nháy """ hoặc ''' thường được sử dụng để tạo docstrings).
+* Blank: Tổng số dòng trống (không chứa mã hoặc nhận xét).
+* C % L: Phần trăm nhận xét trên tổng số dòng mã logic (LLOC).
+* C % S: Phần trăm nhận xét trên tổng số dòng mã nguồn (SLOC).
+* C + M % L: Phần trăm của các dòng nhận xét đơn và nhận xét đa dòng trên tổng số dòng mã logic (LLOC).

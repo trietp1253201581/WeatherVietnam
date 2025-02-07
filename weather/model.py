@@ -81,6 +81,35 @@ class GeneralWeather:
             tuple[int, str|None]: Một tuple có dạng (status_id, description)
         """
         return self.__status_id, self.__description
+    
+    @staticmethod
+    def from_json(source: dict) -> 'GeneralWeather':
+        """
+        Chuyển 1 đối tượng JSON sang General Weather. Đối tượng JSON này phải 
+        chứa các trường status_id và description, các trường trống mang giá trị None.
+
+        Args:
+            source (dict): Một dict lưu giữ đối tượng JSON nguồn
+
+        Returns:
+            GeneralWeather: Đối tượng GeneralWeather thu được
+        """
+        return GeneralWeather(
+            status_id=source['status_id'],
+            description=source['description']
+        )
+    
+    def to_json(self) -> dict:
+        """
+        Chuyển đối tượng này sang một JSON, với các trường thuộc tính tương ứng
+
+        Returns:
+            dict: JSON thu được
+        """
+        return {
+            'status_id': self.__status_id,
+            'description': self.__description
+        }
 
 class WeatherStatus:
     """
@@ -230,7 +259,8 @@ class WeatherStatus:
     
     @collect_time.setter
     def collect_time(self, collect_time: datetime):
-        self.__collect_time = collect_time
+        self.__collect_time = datetime(collect_time.year, collect_time.month, collect_time.day,
+                                       collect_time.hour, collect_time.minute, collect_time.second)
 
     @temp.setter
     def temp(self, temp: float|None):
@@ -324,11 +354,19 @@ class WeatherStatus:
     
     @sunrise.setter
     def sunrise(self, sunrise: datetime|None):
-        self.__sunrise = sunrise
+        if sunrise is not None:
+            self.__sunrise = datetime(sunrise.year, sunrise.month, sunrise.day,
+                                      sunrise.hour, sunrise.minute, sunrise.second)
+        else:
+            self.__sunrise = None
     
     @sunset.setter
     def sunset(self, sunset: datetime|None):
-        self.__sunset = sunset
+        if sunset is not None:
+            self.__sunset = datetime(sunset.year, sunset.month, sunset.day,
+                                     sunset.hour, sunset.minute, sunset.second)
+        else:
+            self.__sunset = None
     
     @aqi.setter
     def aqi(self, aqi: int|None):
@@ -358,7 +396,7 @@ class WeatherStatus:
 
     def __str__(self):
         s = f'WeatherStatus('
-        s += f'city_id={self.__city_id},' 
+        s += f'city_id={self.__city_id}, ' 
         s += f'collect_time={self.__collect_time}, '
         s += f'temp={self.__temp}, '
         s += f'feels_temp={self.__feels_temp}, '
@@ -386,8 +424,8 @@ class WeatherStatus:
         Chuyển một tuple sang một đối tượng Weather Status
 
         Args:
-            source (tuple): Một tuple có dạng sau:
-                (city_id, collect_time, temp, feels_temp, pressure, humidity, sea_level, grnd_level, visibility, 
+            source (tuple): Một tuple có dạng sau: (city_id, collect_time, temp, feels_temp, pressure, 
+                humidity, sea_level, grnd_level, visibility, 
                 wind_speed, wind_deg, wind_gust, clouds_all, rain, sunrise, sunset, aqi, pm2_5, 
                 general_weathers (a list of tuple))
 
@@ -438,3 +476,68 @@ class WeatherStatus:
                 self.__wind_deg, self.__wind_gust, self.__clouds_all, self.__rain, self.__sunrise, 
                 self.__sunset, self.__aqi, self.__pm2_5, 
                 [general_weather.to_tuple() for general_weather in self.__general_weathers])
+        
+    @staticmethod
+    def from_json(source: dict) -> 'WeatherStatus':
+        """
+        Chuyển 1 đối tượng JSON sang WeatherStatus. Đối tượng JSON này phải 
+        chứa các trường city_id, collect_time, temp, feels_temp, pressure, humidity, sea_level, grnd_level,
+        visibility, wind_speed, wind_deg, wind_gust, clouds_all, rain, sunrise, sunset, aqi, pm2_5, 
+        general_weathers (a list of json), các trường trống mang giá trị None.
+
+        Args:
+            source (dict): Một dict lưu giữ đối tượng JSON nguồn
+
+        Returns:
+            WeatherStatus: Đối tượng WeatherStatus thu được
+        """
+        return WeatherStatus(
+            city_id=source['city_id'],
+            collect_time=source['collect_time'],
+            temp=source['temp'],
+            feels_temp=source['feels_temp'],
+            pressure=source['pressure'],
+            humidity=source['humidity'],
+            sea_level=source['sea_level'],
+            grnd_level=source['grnd_level'],
+            visibility=source['visibility'],
+            wind_speed=source['wind_speed'],
+            wind_deg=source['wind_deg'],
+            wind_gust=source['wind_gust'],
+            clouds_all=source['clouds_all'],
+            rain=source['rain'],
+            sunrise=source['sunrise'],
+            sunset=source['sunset'],
+            aqi=source['aqi'],
+            pm2_5=source['pm2_5'],
+            general_weathers=[GeneralWeather.from_json(item) for item in source['general_weathers']],
+        )
+    
+    def to_json(self) -> dict:
+        """
+        Chuyển đối tượng này sang một JSON, với các trường thuộc tính tương ứng
+
+        Returns:
+            dict: JSON thu được
+        """
+        return {
+            'city_id': self.__city_id,
+            'collect_time': self.__collect_time,
+            'temp': self.__temp,
+            'feels_temp': self.__feels_temp,
+            'pressure': self.__pressure,
+            'humidity': self.__humidity,
+            'sea_level': self.__sea_level,
+            'grnd_level': self.__grnd_level,
+            'visibility': self.__visibility,
+            'wind_speed': self.__wind_speed,
+            'wind_deg': self.__wind_deg,
+            'wind_gust': self.__wind_gust,
+            'clouds_all': self.__clouds_all,
+            'rain': self.__rain,
+            'sunrise': self.__sunrise,
+            'sunset': self.__sunset,
+            'aqi': self.__aqi,
+            'pm2_5': self.__pm2_5,
+            'general_weathers': [item.to_json() for item in self.__general_weathers]
+        }
