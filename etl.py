@@ -187,7 +187,8 @@ def auto_weather_vietnam_etl(type: Literal['daily', 'hourly', 'minutely'] = 'hou
             được sử dụng để lưu trữ CSDL. Defaults to 'MySQL'.
 
     Raises:
-        ValueError: Khi chọn `type='daily'` mà không có tham số `daily_collect_time`.
+        ValueError: Khi chọn `type='daily'` mà không có tham số `daily_collect_time`, hoặc khi chọn
+            `type='minutely'` mà không có tham số `minute_frequent`.
     """
     global _job_cnt 
     _job_cnt = 0
@@ -210,6 +211,8 @@ def auto_weather_vietnam_etl(type: Literal['daily', 'hourly', 'minutely'] = 'hou
         job = partial(_weather_viet_nam_etl_limited, dbms)
         schedule.every().hour.at(":00").do(job).tag(type)
     elif type == 'minutely':
+        if minute_frequent is None:
+            raise ValueError("Required minute frequent!")
         job = partial(_supported_minutes_job, minute_frequent, dbms)
         schedule.every().minute.at(":00").do(job).tag(type)
     else:
