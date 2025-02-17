@@ -13,7 +13,7 @@ init_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 import sys
 sys.path.append(init_dir)
 
-from typing import List
+from typing import List, Literal
 from datetime import datetime
 
 from weather.model import WeatherStatus, GeneralWeather
@@ -157,3 +157,17 @@ def get_status(general_weather_dao: BasicGeneralWeatherDAO,
         general_weathers.append(general_weather_dao.get(status_id_item))
     
     return general_weathers
+
+def get_weather_status(weather_status_dao: BasicWeatherStatusDAO,
+                       city_id: int):
+    """
+    Lấy các trạng thái thời tiết của các địa điểm
+
+    Args:
+        weather_status_dao (BasicWeatherStatusDAO): Một DAO có thể thao tác với CSDL các kiểu thời tiết
+        city_id (int): Mã định danh của thành phố.
+
+    Returns:
+        list[WeatherStatus]: Danh sách các kiểu thời tiết của thành phố này
+    """
+    return weather_status_dao.get_all(city_id)
