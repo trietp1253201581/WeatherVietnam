@@ -18,7 +18,7 @@ from mysql.connector import Error
 from typing import List
 from abc import ABC, abstractmethod
 
-import db.info as dbinfo
+import db.config as dbconfig
 from common.dao import BasicMySQLDAO, DAOException, NotExistDataException, BasicMongoDBDAO
 
 from place.model import Country, City
@@ -80,8 +80,8 @@ class MySQLCountryDAO(BasicMySQLDAO, BasicCountryDAO):
             password (str): Mật khẩu bạn dùng để truy cập CSDL với tên đăng nhập trên.
         """
         super().__init__(host, db, user, password,
-                         queriesFile=dbinfo.COUNTRY_SQL_FILE)
-        self._country_reader = self._sqlFileReaders[dbinfo.COUNTRY_SQL_FILE]
+                         queriesFile=dbconfig.COUNTRY_SQL_FILE)
+        self._country_reader = self._sqlFileReaders[dbconfig.COUNTRY_SQL_FILE]
     
     def get(self, code: str) -> Country:
         # Check kết nối và lấy cursor
@@ -91,7 +91,7 @@ class MySQLCountryDAO(BasicMySQLDAO, BasicCountryDAO):
         
         # Lấy các query tương ứng
         get_country_query = self._country_reader.get_query_of(
-            dbinfo.CountryEnableQueries.GET_BY_CODE.value
+            dbconfig.CountryEnableQueries.GET_BY_CODE.value
         )
         
         # Thực hiển đổi code về dạng ISO 3166-1 Alpha-2
@@ -119,7 +119,7 @@ class MySQLCountryDAO(BasicMySQLDAO, BasicCountryDAO):
         
         # Lấy query tương ứng
         insert_country_query = self._country_reader.get_query_of(
-            dbinfo.CountryEnableQueries.INSERT.value
+            dbconfig.CountryEnableQueries.INSERT.value
         )
         
         # Thực hiện lệnh, nếu có lỗi thì sẽ rollback lại
@@ -141,7 +141,7 @@ class MySQLCountryDAO(BasicMySQLDAO, BasicCountryDAO):
         
         # Lấy query
         delete_query = self._country_reader.get_query_of(
-            dbinfo.CountryEnableQueries.DELETE.value
+            dbconfig.CountryEnableQueries.DELETE.value
         )
         
         # Đổi code sang ISO 3166-1 Alpha-2
@@ -234,10 +234,10 @@ class MySQLCityDAO(BasicMySQLDAO, BasicCityDAO):
         """
         
         super().__init__(host, db, user, password,
-                         queriesFile=[dbinfo.COUNTRY_SQL_FILE,
-                                      dbinfo.CITY_SQL_FILE])
-        self._country_reader = self._sqlFileReaders[dbinfo.COUNTRY_SQL_FILE]
-        self._city_reader = self._sqlFileReaders[dbinfo.CITY_SQL_FILE]
+                         queriesFile=[dbconfig.COUNTRY_SQL_FILE,
+                                      dbconfig.CITY_SQL_FILE])
+        self._country_reader = self._sqlFileReaders[dbconfig.COUNTRY_SQL_FILE]
+        self._city_reader = self._sqlFileReaders[dbconfig.CITY_SQL_FILE]
         
     def get(self, city_id: int|None = None, city_name: str|None = None) -> City:
         if city_id is None and city_name is None:
@@ -250,13 +250,13 @@ class MySQLCityDAO(BasicMySQLDAO, BasicCityDAO):
         
         # Lấy các query tương ứng (có cả thao tác với country)
         get_country_query = self._country_reader.get_query_of(
-            dbinfo.CountryEnableQueries.GET_BY_CODE.value
+            dbconfig.CountryEnableQueries.GET_BY_CODE.value
         )
         get_city_query = self._city_reader.get_query_of(
-            dbinfo.CityEnableQueries.GET_BY_ID.value
+            dbconfig.CityEnableQueries.GET_BY_ID.value
         )
         get_city_name_query = self._city_reader.get_query_of(
-            dbinfo.CityEnableQueries.GET_BY_NAME.value
+            dbconfig.CityEnableQueries.GET_BY_NAME.value
         )
 
         # Lấy dữ liệu, tùy thuộc vào có city_id hay không để quyết định chọn query nào
@@ -293,10 +293,10 @@ class MySQLCityDAO(BasicMySQLDAO, BasicCityDAO):
         
         # Lấy các query
         insert_country_query = self._country_reader.get_query_of(
-            dbinfo.CountryEnableQueries.INSERT.value
+            dbconfig.CountryEnableQueries.INSERT.value
         )
         insert_city_query = self._city_reader.get_query_of(
-            dbinfo.CityEnableQueries.INSERT.value
+            dbconfig.CityEnableQueries.INSERT.value
         )
         
         # Thêm vào CSDL, nếu lỗi thì rollback. Nếu quốc gia mà city thuộc về chưa có thì cũng thêm.
@@ -321,7 +321,7 @@ class MySQLCityDAO(BasicMySQLDAO, BasicCityDAO):
         
         # Lấy query
         delete_query = self._city_reader.get_query_of(
-            dbinfo.CityEnableQueries.DELETE.value
+            dbconfig.CityEnableQueries.DELETE.value
         )
         
         # Thực hiện xóa, nếu lỗi thì rollback
@@ -343,10 +343,10 @@ class MySQLCityDAO(BasicMySQLDAO, BasicCityDAO):
         
         # Lấy các query
         get_country_query = self._country_reader.get_query_of(
-            dbinfo.CountryEnableQueries.GET_BY_CODE.value
+            dbconfig.CountryEnableQueries.GET_BY_CODE.value
         )
         get_city_query = self._city_reader.get_query_of(
-            dbinfo.CityEnableQueries.GET_ALL_BY_COUNTRY.value
+            dbconfig.CityEnableQueries.GET_ALL_BY_COUNTRY.value
         )
 
         # Lấy dữ liệu từ bảng country và city

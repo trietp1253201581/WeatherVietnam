@@ -1,5 +1,5 @@
 """
-Module `info` cung cấp đường dẫn tới các file `.sql` cần thiết
+Module `config` cung cấp đường dẫn tới các file `.sql` cần thiết
 và các hằng đại diện cho các loại câu lệnh có thể thao tác với 1
 bảng trong CSDL.
 

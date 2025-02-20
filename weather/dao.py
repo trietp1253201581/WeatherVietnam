@@ -20,7 +20,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 
 from weather.model import GeneralWeather, WeatherStatus
-import db.info as dbinfo
+import db.config as dbconfig
 from common.dao import BasicMySQLDAO, DAOException, NotExistDataException, BasicMongoDBDAO
 
 class BasicGeneralWeatherDAO(ABC):
@@ -70,8 +70,8 @@ class MySQLGeneralWeatherDAO(BasicMySQLDAO, BasicGeneralWeatherDAO):
             password (str): Mật khẩu bạn dùng để truy cập CSDL với tên đăng nhập trên.
         """
         super().__init__(host, db, user, password,
-                         queriesFile=dbinfo.GENERAL_WEATHER_SQL_FILE)
-        self._general_weather_reader = self._sqlFileReaders[dbinfo.GENERAL_WEATHER_SQL_FILE]
+                         queriesFile=dbconfig.GENERAL_WEATHER_SQL_FILE)
+        self._general_weather_reader = self._sqlFileReaders[dbconfig.GENERAL_WEATHER_SQL_FILE]
         
     def get(self, status_id: int) -> GeneralWeather:
         # Check kết nối và lấy cursor
@@ -81,7 +81,7 @@ class MySQLGeneralWeatherDAO(BasicMySQLDAO, BasicGeneralWeatherDAO):
         
         # Lấy các query
         get_status_query = self._general_weather_reader.get_query_of(
-            dbinfo.GeneralWeatherEnableQueries.GET_BY_STATUS.value
+            dbconfig.GeneralWeatherEnableQueries.GET_BY_STATUS.value
         )
         
         # Lấy dữ liệu
@@ -104,7 +104,7 @@ class MySQLGeneralWeatherDAO(BasicMySQLDAO, BasicGeneralWeatherDAO):
         
         # Lấy query
         get_status_query = self._general_weather_reader.get_query_of(
-            dbinfo.GeneralWeatherEnableQueries.GET_ALL_STATUS.value
+            dbconfig.GeneralWeatherEnableQueries.GET_ALL_STATUS.value
         )
         
         # Lấy dữ liệu
@@ -202,12 +202,12 @@ class MySQLWeatherStatusDAO(BasicMySQLDAO, BasicWeatherStatusDAO):
             password (str): Mật khẩu bạn dùng để truy cập CSDL với tên đăng nhập trên.
         """
         super().__init__(host, db, user, password,
-                         queriesFile=[dbinfo.GENERAL_WEATHER_SQL_FILE,
-                                      dbinfo.WEATHER_STATUS_SQL_FILE,
-                                      dbinfo.WEATHER_CONDITION_SQL_FILE])
-        self._general_weather_reader = self._sqlFileReaders[dbinfo.GENERAL_WEATHER_SQL_FILE]
-        self._weather_status_reader = self._sqlFileReaders[dbinfo.WEATHER_STATUS_SQL_FILE]
-        self._weather_condition_reader = self._sqlFileReaders[dbinfo.WEATHER_CONDITION_SQL_FILE]
+                         queriesFile=[dbconfig.GENERAL_WEATHER_SQL_FILE,
+                                      dbconfig.WEATHER_STATUS_SQL_FILE,
+                                      dbconfig.WEATHER_CONDITION_SQL_FILE])
+        self._general_weather_reader = self._sqlFileReaders[dbconfig.GENERAL_WEATHER_SQL_FILE]
+        self._weather_status_reader = self._sqlFileReaders[dbconfig.WEATHER_STATUS_SQL_FILE]
+        self._weather_condition_reader = self._sqlFileReaders[dbconfig.WEATHER_CONDITION_SQL_FILE]
             
     def get(self, city_id: int, collect_time: datetime) -> WeatherStatus:
         # Check kết nối và lấy cursor
@@ -217,13 +217,13 @@ class MySQLWeatherStatusDAO(BasicMySQLDAO, BasicWeatherStatusDAO):
         
         # Lấy các query từ 3 bảng liên quan
         get_status_query = self._general_weather_reader.get_query_of(
-            dbinfo.GeneralWeatherEnableQueries.GET_BY_STATUS.value
+            dbconfig.GeneralWeatherEnableQueries.GET_BY_STATUS.value
         )      
         get_weather_query = self._weather_status_reader.get_query_of(
-            dbinfo.WeatherStatusEnableQueries.GET_BY_CITY_AND_TIME.value
+            dbconfig.WeatherStatusEnableQueries.GET_BY_CITY_AND_TIME.value
         )
         get_condition_query = self._weather_condition_reader.get_query_of(
-            dbinfo.WeatherConditionEnableQueries.GET_ALL_BY_CITY_AND_TIME.value
+            dbconfig.WeatherConditionEnableQueries.GET_ALL_BY_CITY_AND_TIME.value
         )
         
         # Lấy dữ liệu
@@ -260,13 +260,13 @@ class MySQLWeatherStatusDAO(BasicMySQLDAO, BasicWeatherStatusDAO):
         
         # Lấy query từ 3 bảng liên quan
         get_status_query = self._general_weather_reader.get_query_of(
-            dbinfo.GeneralWeatherEnableQueries.GET_BY_STATUS.value
+            dbconfig.GeneralWeatherEnableQueries.GET_BY_STATUS.value
         )      
         get_weather_query = self._weather_status_reader.get_query_of(
-            dbinfo.WeatherStatusEnableQueries.GET_ALL_BY_CITY.value
+            dbconfig.WeatherStatusEnableQueries.GET_ALL_BY_CITY.value
         )
         get_condition_query = self._weather_condition_reader.get_query_of(
-            dbinfo.WeatherConditionEnableQueries.GET_ALL_BY_CITY_AND_TIME.value
+            dbconfig.WeatherConditionEnableQueries.GET_ALL_BY_CITY_AND_TIME.value
         )
         
         # Lấy dữ liệu
@@ -306,13 +306,13 @@ class MySQLWeatherStatusDAO(BasicMySQLDAO, BasicWeatherStatusDAO):
         
         # Lấy query để thao tác trên 2 bảng liên quan
         insert_status_query = self._weather_status_reader.get_query_of(
-            dbinfo.WeatherStatusEnableQueries.INSERT.value
+            dbconfig.WeatherStatusEnableQueries.INSERT.value
         )
         insert_condition_query = self._weather_condition_reader.get_query_of(
-            dbinfo.WeatherConditionEnableQueries.INSERT.value
+            dbconfig.WeatherConditionEnableQueries.INSERT.value
         )
         delete_condition_query = self._weather_condition_reader.get_query_of(
-            dbinfo.WeatherConditionEnableQueries.DELETE.value
+            dbconfig.WeatherConditionEnableQueries.DELETE.value
         )
         
         # Thực hiện, nếu có lỗi thì rollback toàn bộ
@@ -345,7 +345,7 @@ class MySQLWeatherStatusDAO(BasicMySQLDAO, BasicWeatherStatusDAO):
         
         # Lấy query để xóa (do mối quan hệ khóa ngoài nên không cần xóa ở bảng weather_condition)
         delete_query = self._weather_status_reader.get_query_of(
-            dbinfo.WeatherStatusEnableQueries.DELETE.value
+            dbconfig.WeatherStatusEnableQueries.DELETE.value
         )
         
         # Thực hiện, nếu lỗi thì rollback
@@ -367,7 +367,7 @@ class MySQLWeatherStatusDAO(BasicMySQLDAO, BasicWeatherStatusDAO):
         
         # Lấy query để xóa (do mối quan hệ khóa ngoài nên không cần xóa ở bảng weather_condition)
         delete_query = self._weather_status_reader.get_query_of(
-            dbinfo.WeatherStatusEnableQueries.DELETE_ALL_BY_CITY.value
+            dbconfig.WeatherStatusEnableQueries.DELETE_ALL_BY_CITY.value
         )
         
         # Thực hiện, nếu lỗi thì rollback

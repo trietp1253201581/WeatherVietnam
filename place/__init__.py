@@ -10,6 +10,6 @@ Module:
     `model`, `dao`, `business`
 """
 
-from . import model, dao, business
+from . import model, dao, business, api
 
-__all__ = ['model', 'dao', 'business']
+__all__ = ['model', 'dao', 'business', 'api']

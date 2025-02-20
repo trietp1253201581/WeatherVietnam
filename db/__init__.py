@@ -9,9 +9,9 @@ Author:
 Last Modified Date: 
     03/02/2025
 Module:
-    `sql_reader`, `info`
+    `sql_reader`, `config`
 """
 
-from . import sql_reader, info
+from . import config, sql_reader
 
-__all__ = ['sql_reader', 'info']
+__all__ = ['sql_reader', 'config']
